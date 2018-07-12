@@ -10,7 +10,6 @@
 #' @param J Number of items.
 #' @param K Number of latent dimensions.
 #' @keywords CREDI
-#' @export
 #' @examples
 #' lf_grad_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA,J,K)
 

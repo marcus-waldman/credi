@@ -3,16 +3,17 @@
 #' This calculates the posterior density function.
 #' @param data (data.frame) Defaults to NULL. Response data. If NULL, then user is prompted to identify a .csv file with response data. Defaults to NULL.
 #' @param reverse_code (Logical) Defaults to TRUE. If TRUE, then reverse coding is automated to appropriately handle the negatively worded items LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then no reverse coding is applied.
-#' @interactive (Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.
+#' @param interactive (Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.
 #' @keywords CREDI
 #' @export
 #' @examples
 #' score()
 
-
-#reverse_code = FALSE
-#save_logfile = TRUE
-#interactive = FALSE
+#
+# reverse_code = FALSE
+# save_logfile = TRUE
+# interactive = FALSE
+# data = input_df
 
 score<-function(data = NULL, reverse_code = TRUE, interactive = TRUE){
 
@@ -28,8 +29,8 @@ score<-function(data = NULL, reverse_code = TRUE, interactive = TRUE){
 
     # Load required pacakges
 
-    if(!require(stats)){install.packages("stats")}; library("stats");
-    if(!require(svDialogs)){install.packages("svDialogs")}; library("svDialogs");
+    require("stats")
+    require("svDialogs")
 
     # Created log file
     time1 = proc.time()
@@ -86,6 +87,7 @@ score<-function(data = NULL, reverse_code = TRUE, interactive = TRUE){
 
     # Crate data matricies
     X = model.matrix(~1 + I( (AGE-18)/10.39 ) + I( ((AGE-18)/10.39)^2 ) + I( ((AGE-18)/10.39)^3 ), data = cleaned_df)
+    X_4 = model.matrix(~1 + I( (AGE-18)/10.39 ) + I( ((AGE-18)/10.39)^2 ) + I( ((AGE-18)/10.39)^3 ) + I( ((AGE-18)/10.39)^4 ), data = cleaned_df)
     Y = as.matrix(cleaned_df[,-match(c("ID","AGE",items_noresponse), names(cleaned_df))]); Y[is.na(Y)] = -9L
     MU_LF = X%*%as.matrix(B) #NxK (matrix)
     MU_SF = X%*%as.numeric(beta) #Nx1
@@ -130,8 +132,8 @@ score<-function(data = NULL, reverse_code = TRUE, interactive = TRUE){
     for (i in 1:N){
 
       # Obtain the standardized estimates
-      center_i = X[i,] %*% as.matrix(normcoef_mean)
-      scale_i =  X[i,] %*% as.matrix(normcoef_sd)
+      center_i = X_4[i,] %*% as.matrix(normcoef_mean)
+      scale_i =  X_4[i,] %*% as.matrix(normcoef_sd)
 
       # Score the long form
       out_LF = optim(par = as.vector(THETA0_LF[i,]),
@@ -151,26 +153,31 @@ score<-function(data = NULL, reverse_code = TRUE, interactive = TRUE){
         fisherInfo = out_LF$hessian
         SE_LF[i,] = sqrt(diag(solve(fisherInfo,diag(K))))
 
-        Z_LF[i,1:4] = (MAP_LF[i,]-center_i[1,1:4])/scale_i[1,1:4]
+        Z_LF[i,1:4] = (MAP_LF[i,]+50-center_i[1,1:4])/scale_i[1,1:4]
+
+        # Average of the scores (note that the _SF is misleading b/c it is not on the same scale as short form)
+        MAP_SF[i, 1] = mean(out_LF$par)
+        SE_SF[i,1] = (1/1)*(1/sqrt(sum(sum(out_LF$hessian))))
+        Z_SF[i,1] = weighted.mean(Z_LF[i,], w = (1./SE_LF[i,])^2)
       }
 
 
-      # Score the short form
-      out_SF = optim(par = as.vector(THETA0_SF[i,]),
-                     fn = sf_posterior_density,
-                     Yi = as.vector(Y[i,]),
-                     MUi = as.vector(MU_SF[i,]),
-                     SIGMA_SQi = as.numeric(SIGMA_SQ[i]),
-                     DELTA = as.vector(DELTA),
-                     ALPHA = as.vector(ALPHA),
-                     J = as.integer(J),
-                     method = "BFGS",
-                     hessian = TRUE)
-      if(out_SF$convergence == 0){
-        MAP_SF[i,] = out_SF$par
-        SE_SF[i,] = sqrt(1.0/out_SF$hessian)
-        Z_SF[i,1] = (MAP_SF[i,]-center_i[1,5])/scale_i[1,5]
-      }
+      # # Score the short form
+      # out_SF = optim(par = as.vector(THETA0_SF[i,]),
+      #                fn = sf_posterior_density,
+      #                Yi = as.vector(Y[i,]),
+      #                MUi = as.vector(MU_SF[i,]),
+      #                SIGMA_SQi = as.numeric(SIGMA_SQ[i]),
+      #                DELTA = as.vector(DELTA),
+      #                ALPHA = as.vector(ALPHA),
+      #                J = as.integer(J),
+      #                method = "BFGS",
+      #                hessian = TRUE)
+      # if(out_SF$convergence == 0){
+      #   MAP_SF[i,] = out_SF$par
+      #   SE_SF[i,] = sqrt(1.0/out_SF$hessian)
+      #   Z_SF[i,1] = (MAP_SF[i,]+50-center_i[1,5])/scale_i[1,5]
+      # }
 
 
       setTxtProgressBar(pb, i)

@@ -9,7 +9,6 @@
 #' @param ALPHA Size J vector of item discrimination values.
 #' @param J Number of items.
 #' @keywords CREDI
-#' @export
 #' @examples
 #' sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J)
 

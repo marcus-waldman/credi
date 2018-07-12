@@ -1,5 +1,5 @@
 write_log<-function(log, folder, file = NULL){
-  
+
   if (is.null(file)){
     out_dlgDir = dlgSave(default = folder, title = "Save as", gui = .GUI)
     out_txt = paste(strsplit(out_dlgDir$res,"/")[[1]],collapse = "/")
@@ -13,9 +13,9 @@ write_log<-function(log, folder, file = NULL){
       writeLines(log[[l]])
     } else {
       print(log[[l]])
-      
+
     }
   }
   sink()
-  
+
 }
