@@ -8,12 +8,13 @@
 #' @param DELTA Size J vector of item difficulties.
 #' @param ALPHA Size J vector of item discrimination values.
 #' @param J Number of items.
+#' @param weight Size J vector of weights for Bayesian Bootstrapping.
 #' @keywords CREDI
 #' @examples
 #' sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J)
 
 
-sf_posterior_density<-function(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J){
+sf_posterior_density<-function(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J, weight = NULL){
 
   #inputs
   #Yi - J (vector)
@@ -23,6 +24,9 @@ sf_posterior_density<-function(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J){
   #DELTA - J (vector)
   #ALPHA - J (vector)
   # J (integer)
+  # W (vector)
+
+  if(is.null(weight)){weight = rep(1,J)}
 
   # Defined variables
   # PYi - J (vector)
@@ -37,8 +41,8 @@ sf_posterior_density<-function(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J){
   # likelihood component
   ll = as.numeric(0) #(scalar)
   for (j in 1:J){
-    if (Yi[j] == 1L){ll = ll + log(PYi[j])}
-    if (Yi[j] == 0L){ll = ll + log(1.0-PYi[j])}
+    if (Yi[j] == 1L){ll = ll + weight[j]*log(PYi[j])}
+    if (Yi[j] == 0L){ll = ll + weight[j]*log(1.0-PYi[j])}
   }
 
   # prior distribution component
