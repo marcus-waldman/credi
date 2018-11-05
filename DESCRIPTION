@@ -3,7 +3,7 @@ Title: CREDI Scoring
 Version: 1.0.5
 Authors@R: person("Marcus", "Waldman", email = "marcus_waldman@gse.harvard.edu", role = c("aut", "cre"))
 Description: Scores CREDI response data using Maximum-A-Posteriori (MAP) estimation.
-Depends: R (>= 3.5.0)
+Depends: R (>= 3.5.1)
 Imports:
    svDialogs (>= 1.0.0), 
    stats (>= 3.5.0)
