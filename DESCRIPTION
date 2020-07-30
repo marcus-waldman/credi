@@ -2,7 +2,7 @@ Package: credi
 Title: CREDI Scoring
 Version: 1.0.5
 Authors@R: person("Marcus","Waldman", role = c("aut", "cre"), email = "marcus_waldman@gse.harvard.edu")
-Author: Marcus Waldman <marcus_waldman@gse.harvard.edu>
+Author: Marcus Waldman <marcus_waldman@gse.harvard.edu> and Jonathan Seiden
 Maintainer: Marcus Waldman <marcus_waldman@gse.harvard.edu>
 Description: This function scores CREDI response data.
 License: MIT
