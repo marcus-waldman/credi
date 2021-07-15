@@ -4,7 +4,7 @@
 \alias{clean}
 \title{Clean input CREDI response data}
 \usage{
-clean(input_df, mest_df, reverse_code, interactive, log)
+clean(input_df, mest_df, reverse_code, interactive, log, min_items)
 }
 \arguments{
 \item{input_df}{(data.frame) Raw input data from the user-specified csv file.}
@@ -15,10 +15,12 @@ clean(input_df, mest_df, reverse_code, interactive, log)
 
 \item{log}{(string) Name of the *.txt log file for the CREDI scoring.}
 
+\item{min_items}{(integer) Default to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.}
+
 \item{csv_wd}{(string) Working directory where input *.csv file is located.}
 }
 \description{
-This calculates the posterior density function.
+This takes raw CREDI data and pre-processes it for scoring. This function is used by the `score` function and is not typically used directly by a user.
 }
 \examples{
 clean(input_df, mest_df, reverse_code, interactive, log)

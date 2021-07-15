@@ -4,8 +4,7 @@
 \alias{lf_posterior_density}
 \title{Posterior density for CREDI subscales}
 \usage{
-lf_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA, J, K,
-  weight = NULL)
+lf_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA, J, K, weight = NULL)
 }
 \arguments{
 \item{THETAi}{Size K vector of scaled scores for the i-th individual.}

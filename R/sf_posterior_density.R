@@ -1,10 +1,10 @@
 #' Posterior density for short form CREDI scale.
 #'
-#' This calculates the posterior density function.
+#' This calculates the posterior density function ().
 #' @param THETAi Scalar representing scaled score for the i-th individual.
 #' @param Yi Size N vector of item responses for the i-th individual.
 #' @param MUi Scalar representing prior's mean conditional on AGE.
-#' @param SIGMA_SQi Scalar represeting prior variance conditional on AGE.
+#' @param SIGMA_SQi Scalar representing prior variance conditional on AGE.
 #' @param DELTA Size J vector of item difficulties.
 #' @param ALPHA Size J vector of item discrimination values.
 #' @param J Number of items.

@@ -4,19 +4,40 @@
 \alias{score}
 \title{Score CREDI response data}
 \usage{
-score(data = NULL, reverse_code = TRUE, interactive = TRUE)
+score(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5)
 }
 \arguments{
 \item{data}{(data.frame) Defaults to NULL. Response data. If NULL, then user is prompted to identify a .csv file with response data. Defaults to NULL.}
 
-\item{reverse_code}{(Logical) Defaults to TRUE. If TRUE, then reverse coding is automated to appropriately handle the negatively worded items LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then no reverse coding is applied.}
+\item{reverse_code}{(Logical) Defaults to TRUE. If TRUE, then reverse coding is automated to appropriately handle the negatively worded items LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then the package assumes items are already reverse coded and no changes are applied prior to scoring.}
 
 \item{interactive}{(Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.}
+
+\item{min_items}{(integer) Defaults to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.}
 }
 \description{
-This calculates the posterior density function.
+This function calculates the posterior density function and provides CREDI Overall, Short Form, and domain-specific scores. 
+CREDI variables must be input according to standardized variable names. Four types of naming conventions are supported by this package:
+\itemize{
+ \item{"Long Form (October 2017)" variable names starting with "LF"}
+ \item{"Short Form" variables starting with "CREDI_A01", "CREDI_B01", etc.}
+ \item{"Long Form (April 2017)" variables starting with "CREDI_LM", "CREDI_LC", etc.}
+ \item{"CREDI Pilot 4" variables starting with "QC", "QS", and "QM"}
+}
+The function also requires a unique ID variable and an AGE variable. Only scores with a non-missing AGE variables will be scored.
 }
 \examples{
-score()
+
+#Create a sample dataframe
+dat <- data.frame(ID = 1:3, AGE = c(3,5,4), LF1 = c(1,0,NA) , LF2 = c(0,0,0), LF3 = c(1,0,1), LF4 = c(1,1,1), LF5 = c(1,0,0))
+
+#Score the dat
+scored_dat <- credi::score(data = dat, reverse_code = FALSE, interactive = FALSE, min_items = 5)
+
+#Print out domain scores:
+scored_dat$scores[,c("SF", "MOT", "LANG", "SEM", "COG", "OVERALL")]
+SF    MOT   LANG    SEM    COG OVERALL
+1 41.204 43.489 45.968 44.626 45.091  40.079
+2 42.917 42.058 45.049 43.755 44.250  38.16
+#One observation did not have at least 5 items responded to, so is not included in the results
 }
-\keyword{CREDI}

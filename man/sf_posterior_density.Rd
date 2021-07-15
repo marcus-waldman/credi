@@ -4,8 +4,16 @@
 \alias{sf_posterior_density}
 \title{Posterior density for short form CREDI scale.}
 \usage{
-sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA, J,
-  weight = NULL)
+sf_posterior_density(
+  THETAi,
+  Yi,
+  MUi,
+  SIGMA_SQi,
+  DELTA,
+  ALPHA,
+  J,
+  weight = NULL
+)
 }
 \arguments{
 \item{THETAi}{Scalar representing scaled score for the i-th individual.}
@@ -14,7 +22,7 @@ sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA, J,
 
 \item{MUi}{Scalar representing prior's mean conditional on AGE.}
 
-\item{SIGMA_SQi}{Scalar represeting prior variance conditional on AGE.}
+\item{SIGMA_SQi}{Scalar representing prior variance conditional on AGE.}
 
 \item{DELTA}{Size J vector of item difficulties.}
 
@@ -25,7 +33,7 @@ sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA, J,
 \item{weight}{Size J vector of weights for Bayesian Bootstrapping.}
 }
 \description{
-This calculates the posterior density function.
+This calculates the posterior density function ().
 }
 \examples{
 sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J)
