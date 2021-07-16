@@ -24,7 +24,7 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
   # Output: List with the following:
   #  cleaned_df - Cleaned data (i.e., missing data codes, reverse coding as necessary)
   #  items_noresponse - character vector with items missing all responses
-
+    
   stop = 0
 
   # Make all variable names uppercase
@@ -50,7 +50,6 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
     stop_message = "\n* Error: Values of ID are not unique across observations. Construct a unique identifier and re-run."
     log[[length(log)+1]] = stop_message
   }
-
 
   # Check that AGE is in the response data
   if (!"AGE" %in% names(input_df)){
@@ -131,7 +130,6 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
                                  paste(vnfreq_orig$orig[inds], collapse = ", "), sep = "" )
 
   }
-
 
   vnfreq_new = data.frame(table(rename_df$new)); names(vnfreq_new) = c("new","freq_new")
   rename_df = merge(x = rename_df, y = vnfreq_new, by = "new", all.x = TRUE, all.y = TRUE, sort = FALSE)
@@ -289,33 +287,30 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
 
   }
 
-
   # Print out missing data descriptive statistics
   miss_df = data.frame(round(100*apply(cleaned_df[,-c(1,2)], 2, function(X){sum(is.na(X))})/N,2))
   names(miss_df) = c("Pct_Missing")
   miss_df = subset(miss_df, Pct_Missing>0)
-  if (nrow(miss_df)>0){
 
-    items_noresponse = row.names(miss_df)[miss_df$Pct_Missing==100]
+  #Create an object of items that are missing to ignore while scoring
+  items_noresponse = row.names(miss_df)[miss_df$Pct_Missing==100]
 
-    inds_order = sort(miss_df$Pct_Missing, decreasing = TRUE, index.return = TRUE)
-    miss_df2 = data.frame(Item = row.names(miss_df)[inds_order$ix], Pct_Missing = miss_df$Pct_Missing[inds_order$ix])
+  inds_order = sort(miss_df$Pct_Missing, decreasing = TRUE, index.return = TRUE)
+  miss_df2 = data.frame(Item = row.names(miss_df)[inds_order$ix], Pct_Missing = miss_df$Pct_Missing[inds_order$ix])
 
-    # if (length(items_noresponse)>0){
-    #
-    #   log[[length(log)+1]]  = c(paste("\nThe following items on the long form contained missing responses from all individuals: ",
-    #                      paste(subset(miss_df2, Pct_Missing==100)$Item, collapse = ", "), sep = ""))
-    # }
-
-    miss_df3 = miss_df2
-    miss_df3 = transform(miss_df3, Pct_Missing = round(Pct_Missing, 1))
-    miss_df3 = transform(miss_df3, Pct_Missing = paste(Pct_Missing,"%", sep = ""));
-
-    log[[length(log)+1]] = "Missingness rates of items responses:"
-    log[[length(log)+1]] = miss_df3
-
+  if (length(items_noresponse)>0){
+    log[[length(log)+1]]  = c(paste("\nThe following items on the long form contained missing responses from all individuals: ",
+                       paste(subset(miss_df2, Pct_Missing==100)$Item, collapse = ", "), sep = ""))
   }
 
+  miss_df3 = miss_df2
+  miss_df3 = transform(miss_df3, Pct_Missing = round(Pct_Missing, 1))
+  miss_df3 = transform(miss_df3, Pct_Missing = paste(Pct_Missing,"%", sep = ""));
+
+  log[[length(log)+1]] = "Missingness rates of items responses:"
+  log[[length(log)+1]] = miss_df3
+
+  # Reverse code items that need it
   reversed_items = NULL
   if (reverse_code == TRUE){
     # Reverse code as needed
