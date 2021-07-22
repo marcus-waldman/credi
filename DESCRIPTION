@@ -1,13 +1,15 @@
 Package: credi
 Title: CREDI Multi-dimensional Item Factor Analysis Scoring
-Description: The `score` function takes raw item-level CREDI response data and calculates Overall, Short Form, and domain-level scores.
+Description: The score() function takes raw item-level response data from the Caregiver Reported Early Development Instruments and calculates composite scores of early childhood development.
 Version: 1.1.0
 Authors@R: c(person("Marcus","Waldman", 
 		role = c("aut"), 
-		email = "marcus.waldman@unmc.edu"),
+		email = "marcus.waldman@unmc.edu", 
+		comment = c(ORCID = "0000-0002-3288-4803")),
 	      person("Jonathan","Seiden", 
 		role = c("aut", "cre"), 
-		email = "jseiden@g.harvard.edu"))
+		email = "jseiden@g.harvard.edu", 
+		comment = c(ORCID = "0000-0002-0318-8016")))
 License: MIT
 URL: https://sites.sph.harvard.edu/credi/
 Depends: R (>= 3.5.0)

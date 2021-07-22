@@ -9,8 +9,7 @@
 #' @param LAMBDA Size J-by-K matrix of item loadings.
 #' @param J Number of items.
 #' @param K Number of latent dimensions.
-#' @keywords CREDI
-#' @export
+#' @keywords internal
 #' @examples
 #' lf_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA,J,K)
 

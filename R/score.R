@@ -13,7 +13,7 @@
 #' @param data (data.frame) Defaults to NULL. Response data. If NULL, then user is prompted to identify a .csv file with response data. Defaults to NULL.
 #' @param reverse_code (Logical) Defaults to TRUE. If TRUE, then reverse coding is automated to appropriately handle the negatively worded items LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then the package assumes items are already reverse coded and no changes are applied prior to scoring.
 #' @param interactive (Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.
-#' @param min_items (integer) Defaults to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.
+#' @param min_items (integer) Defaults to 5. The minimum number of scale-specific items (e.g. SEM, MOT, etc.) required for a score to be calculated.
 #' @importFrom magrittr %>%
 #' @importFrom readr read_csv
 #' @importFrom readr write_csv
@@ -34,10 +34,10 @@
 #' scored_dat <- credi::score(data = dat, reverse_code = FALSE, interactive = FALSE, min_items = 5)
 #' 
 #' #Print out domain scores:
-#' scored_dat$scores[,c("SF", "MOT", "LANG", "SEM", "COG", "OVERALL")]
-#' SF    MOT   LANG    SEM    COG OVERALL
-#' 1 41.204 43.489 45.968 44.626 45.091  40.079
-#' 2 42.917 42.058 45.049 43.755 44.250  38.16
+#' scored_dat$scores[,c("MOT", "LANG", "SEM", "COG", "OVERALL")]
+#' MOT   LANG    SEM    COG OVERALL
+#' 43.489 45.968 44.626 45.091  40.079
+#' 42.058 45.049 43.755 44.250  38.16
 #' #One observation did not have at least 5 items responded to, so is not included in the results
 
 score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5){
@@ -179,9 +179,6 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   for (i in 1:N){
 
     scales_i = which_scores(Y[i,], mest_df, min_items)
-    if(list_cleaned$is_sf){
-      scales_i[-1] <- F
-    }
 
     notes_i = ""
 
@@ -284,12 +281,10 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   MAP_LF$OVERALL = round(MAP_OVERALL,3)+50
   SE_LF$OVERALL_SE = round(OVERALL_SE,3)
 
-  # Clean up the MAP_SF and SE_SF
-  MAP_SF = data.frame(SF = round(MAP_SF,3)+50)
-  SE_SF = data.frame(SF_SE = round(SE_SF,3))
-
   # Put in the input depending on whether dataset is SF or LF
-  output_scored = cbind(data.frame(ID = cleaned_df$ID), MAP_LF, SE_LF, MAP_SF, SE_SF, FLAGS, NOTES)
+  output_scored = cbind(data.frame(ID = cleaned_df$ID), MAP_LF, SE_LF, FLAGS, NOTES) %>% 
+    select(-starts_with("SF")) %>% 
+    select(-ends_with("SF"))
 
   # Calculate in the standardized estimates
   AGE <- cleaned_df %>%
@@ -303,14 +298,17 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
            Z_COG = (COG - COG_mu) / COG_sigma,
            Z_LANG = (LANG - LANG_mu) / LANG_sigma,
            Z_SEM = (SEM - SEM_mu) / SEM_sigma,
-           Z_MOT = (MOT - MOT_mu) / MOT_sigma,
-           Z_SF = (SF - SF_mu) / SF_sigma) %>%
-    select(-names(zscoredat))
+           Z_MOT = (MOT - MOT_mu) / MOT_sigma) %>%
+    select(ID, AGE, COG, LANG, MOT, SEM, OVERALL,
+             Z_COG, Z_LANG, Z_MOT, Z_SEM, Z_OVERALL,
+             COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
+             COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
+             COG_flag, LANG_flag, MOT_flag, OVERALL_flag, NOTES)
 
   #Sanitize Short Form data
   if(is_sf == TRUE){
     output_scored <- output_scored %>%
-      select(c("ID", "SF", "SF_SE", "Z_SF"))
+      select(c("ID", "OVERALL", "OVERALL_SE", "Z_OVERALL"))
   }
 
   #Write out the output df

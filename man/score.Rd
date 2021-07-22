@@ -13,7 +13,7 @@ score(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5)
 
 \item{interactive}{(Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.}
 
-\item{min_items}{(integer) Defaults to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.}
+\item{min_items}{(integer) Defaults to 5. The minimum number of scale-specific items (e.g. SEM, MOT, etc.) required for a score to be calculated.}
 }
 \description{
 This function calculates the posterior density function and provides CREDI Overall, Short Form, and domain-specific scores. 
@@ -35,9 +35,9 @@ dat <- data.frame(ID = 1:3, AGE = c(3,5,4), LF1 = c(1,0,NA) , LF2 = c(0,0,0), LF
 scored_dat <- credi::score(data = dat, reverse_code = FALSE, interactive = FALSE, min_items = 5)
 
 #Print out domain scores:
-scored_dat$scores[,c("SF", "MOT", "LANG", "SEM", "COG", "OVERALL")]
-SF    MOT   LANG    SEM    COG OVERALL
-1 41.204 43.489 45.968 44.626 45.091  40.079
-2 42.917 42.058 45.049 43.755 44.250  38.16
+scored_dat$scores[,c("MOT", "LANG", "SEM", "COG", "OVERALL")]
+MOT   LANG    SEM    COG OVERALL
+43.489 45.968 44.626 45.091  40.079
+42.058 45.049 43.755 44.250  38.16
 #One observation did not have at least 5 items responded to, so is not included in the results
 }

@@ -25,4 +25,4 @@ This takes raw CREDI data and pre-processes it for scoring. This function is use
 \examples{
 clean(input_df, mest_df, reverse_code, interactive, log)
 }
-\keyword{CREDI}
+\keyword{internal}

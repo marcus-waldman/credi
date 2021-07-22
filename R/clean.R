@@ -7,8 +7,7 @@
 #' @param reverse_code (logical). If TRUE, then reverse codes LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then no reverse coding is applied.
 #' @param log (string) Name of the *.txt log file for the CREDI scoring.
 #' @param min_items (integer) Default to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.
-#' @keywords CREDI
-#' @export
+#' @keywords internal
 #' @examples
 #' clean(input_df, mest_df, reverse_code, interactive, log)
 
