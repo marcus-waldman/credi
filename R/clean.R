@@ -8,8 +8,6 @@
 #' @param log (string) Name of the *.txt log file for the CREDI scoring.
 #' @param min_items (integer) Default to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.
 #' @keywords internal
-#' @examples
-#' clean(input_df, mest_df, reverse_code, interactive, log)
 
 clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
   # Input:

@@ -308,7 +308,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   #Sanitize Short Form data
   if(is_sf == TRUE){
     output_scored <- output_scored %>%
-      select(c("ID", "OVERALL", "OVERALL_SE", "Z_OVERALL"))
+      select(c("ID", "OVERALL", "OVERALL_SE", "Z_OVERALL", "NOTES"))
   }
 
   #Write out the output df

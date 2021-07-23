@@ -26,7 +26,4 @@ lf_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA, J, K, weight = NULL)
 \description{
 This calculates the posterior density function.
 }
-\examples{
-lf_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA,J,K)
-}
 \keyword{internal}

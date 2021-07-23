@@ -22,7 +22,4 @@ clean(input_df, mest_df, reverse_code, interactive, log, min_items)
 \description{
 This takes raw CREDI data and pre-processes it for scoring. This function is used by the `score` function and is not typically used directly by a user.
 }
-\examples{
-clean(input_df, mest_df, reverse_code, interactive, log)
-}
 \keyword{internal}

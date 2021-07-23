@@ -10,8 +10,6 @@
 #' @param J Number of items.
 #' @param K Number of latent dimensions.
 #' @keywords internal
-#' @examples
-#' lf_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA,J,K)
 
 
 lf_posterior_density<-function(THETAi, Yi, MUi, invS, TAU, LAMBDA,J,K, weight = NULL){

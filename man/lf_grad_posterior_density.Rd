@@ -26,7 +26,4 @@ lf_grad_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA, J, K)
 \description{
 This calculates the analytic gradient of the posterior density function.
 }
-\examples{
-lf_grad_posterior_density(THETAi, Yi, MUi, invS, TAU, LAMBDA,J,K)
-}
 \keyword{internal}
