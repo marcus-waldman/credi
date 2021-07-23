@@ -299,7 +299,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
            Z_LANG = (LANG - LANG_mu) / LANG_sigma,
            Z_SEM = (SEM - SEM_mu) / SEM_sigma,
            Z_MOT = (MOT - MOT_mu) / MOT_sigma) %>%
-    select(ID, AGE, COG, LANG, MOT, SEM, OVERALL,
+    select(ID, COG, LANG, MOT, SEM, OVERALL,
              Z_COG, Z_LANG, Z_MOT, Z_SEM, Z_OVERALL,
              COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
              COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
@@ -308,7 +308,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   #Sanitize Short Form data
   if(is_sf == TRUE){
     output_scored <- output_scored %>%
-      select(c("ID", "OVERALL", "OVERALL_SE", "Z_OVERALL", "NOTES"))
+      select(ID, OVERALL, OVERALL_SE, Z_OVERALL, NOTES)
   }
 
   #Write out the output df
