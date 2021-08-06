@@ -35,7 +35,4 @@ sf_posterior_density(
 \description{
 This calculates the posterior density function ().
 }
-\examples{
-sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J)
-}
 \keyword{CREDI}

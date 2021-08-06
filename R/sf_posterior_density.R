@@ -10,9 +10,6 @@
 #' @param J Number of items.
 #' @param weight Size J vector of weights for Bayesian Bootstrapping.
 #' @keywords CREDI
-#' @examples
-#' sf_posterior_density(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J)
-
 
 sf_posterior_density<-function(THETAi, Yi, MUi, SIGMA_SQi, DELTA, ALPHA,J, weight = NULL){
 

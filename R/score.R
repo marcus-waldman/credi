@@ -19,25 +19,39 @@
 #' @importFrom readr write_csv
 #' @importFrom dplyr case_when
 #' @importFrom dplyr mutate
+#' @importFrom dplyr if_else
+#' @importFrom dplyr bind_rows
 #' @importFrom dplyr filter
 #' @importFrom dplyr select
 #' @importFrom dplyr n_distinct
 #' @importFrom dplyr left_join
 #' @importFrom tibble rownames_to_column
+#' @importFrom stats complete.cases
+#' @importFrom stats model.matrix
+#' @importFrom stats na.omit
+#' @importFrom stats optim
+#' @importFrom stats var
+#' @importFrom dplyr starts_with
+#' @importFrom dplyr ends_with
+#' @importFrom utils setTxtProgressBar
+#' @importFrom utils txtProgressBar
+#' @importFrom svDialogs dlgOpen
+#' @importFrom svDialogs dlgSave
 #' @export
 #' @examples
-#' 
 #' #Create a sample dataframe
-#' dat <- data.frame(ID = 1:3, AGE = c(3,5,4), LF1 = c(1,0,NA) , LF2 = c(0,0,0), LF3 = c(1,0,1), LF4 = c(1,1,1), LF5 = c(1,0,0))
+#' dat <- data.frame(
+#' ID = 1:3, AGE = c(3,5,4), LF1 = c(1,0,NA), LF2 = c(0,0,0), 
+#' LF3 = c(1,0,1), LF4 = c(1,1,1), LF5 = c(1,0,0))
 #' 
 #' #Score the dat
 #' scored_dat <- credi::score(data = dat, reverse_code = FALSE, interactive = FALSE, min_items = 5)
 #' 
 #' #Print out domain scores:
 #' scored_dat$scores[,c("MOT", "LANG", "SEM", "COG", "OVERALL")]
-#' MOT   LANG    SEM    COG OVERALL
-#' 43.489 45.968 44.626 45.091  40.079
-#' 42.058 45.049 43.755 44.250  38.16
+#' #MOT   LANG    SEM    COG OVERALL
+#' #43.489 45.968 44.626 45.091  40.079
+#' #42.058 45.049 43.755 44.250  38.16
 #' #One observation did not have at least 5 items responded to, so is not included in the results
 
 score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5){
@@ -50,13 +64,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     }
   }
 
-  # Load required packages
-
-  require("stats")
-  require("svDialogs")
-  require("tidyverse")
-
-  # Created log file
+  # Create log file
   time1 = proc.time()
   log = list(c("------------------------------------"), c("Log for CREDI Scoring Messages"),
              paste("Date:", Sys.time()), c("------------------------------------"))

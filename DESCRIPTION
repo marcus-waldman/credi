@@ -1,6 +1,6 @@
 Package: credi
-Title: CREDI Multi-dimensional Item Factor Analysis Scoring
-Description: The score() function takes raw item-level response data from the Caregiver Reported Early Development Instruments and calculates composite scores of early childhood development.
+Title: Caregiver Reported Early Development Instruments (CREDI) Multi-Dimensional Item Factor Analysis Scoring
+Description: Produces composite scores of early childhood development using raw item-level response data collected with the Caregiver Reported Early Development Instruments <https://credi.gse.harvard.edu/> (CREDI) and input by the user. The score() function accepts user data either directly through the R session, or through an interactive dialogue. If data are properly named, the package calculates CREDI Overall and domain scores, estimated standard errors of measurement, and norm-referenced Z-scores and produces a log of potential scoring issues and errors. The package uses the scoring algorithms reported in Waldman, McCoy, Seiden, Cuartas, and Fink (2021) <doi:10.1177/01650254211005560>. 
 Version: 1.1.0
 Authors@R: c(person("Marcus","Waldman", 
 		role = c("aut"), 
@@ -10,8 +10,8 @@ Authors@R: c(person("Marcus","Waldman",
 		role = c("aut", "cre"), 
 		email = "jseiden@g.harvard.edu", 
 		comment = c(ORCID = "0000-0002-0318-8016")))
-License: MIT
-URL: https://sites.sph.harvard.edu/credi/
+License: MIT + file LICENSE
+URL: https://credi.gse.harvard.edu/
 Depends: R (>= 3.5.0)
 Imports: svDialogs (>= 1.0.0), 
 	 stats (>= 4.0.0), 
@@ -20,5 +20,4 @@ Imports: svDialogs (>= 1.0.0),
 	 dplyr (>= 1.0.5),
 	 magrittr (>= 2.0.1)
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.1.1

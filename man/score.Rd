@@ -27,17 +27,18 @@ CREDI variables must be input according to standardized variable names. Four typ
 The function also requires a unique ID variable and an AGE variable. Only scores with a non-missing AGE variables will be scored.
 }
 \examples{
-
 #Create a sample dataframe
-dat <- data.frame(ID = 1:3, AGE = c(3,5,4), LF1 = c(1,0,NA) , LF2 = c(0,0,0), LF3 = c(1,0,1), LF4 = c(1,1,1), LF5 = c(1,0,0))
+dat <- data.frame(
+ID = 1:3, AGE = c(3,5,4), LF1 = c(1,0,NA), LF2 = c(0,0,0), 
+LF3 = c(1,0,1), LF4 = c(1,1,1), LF5 = c(1,0,0))
 
 #Score the dat
 scored_dat <- credi::score(data = dat, reverse_code = FALSE, interactive = FALSE, min_items = 5)
 
 #Print out domain scores:
 scored_dat$scores[,c("MOT", "LANG", "SEM", "COG", "OVERALL")]
-MOT   LANG    SEM    COG OVERALL
-43.489 45.968 44.626 45.091  40.079
-42.058 45.049 43.755 44.250  38.16
+#MOT   LANG    SEM    COG OVERALL
+#43.489 45.968 44.626 45.091  40.079
+#42.058 45.049 43.755 44.250  38.16
 #One observation did not have at least 5 items responded to, so is not included in the results
 }
