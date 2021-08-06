@@ -311,7 +311,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
              Z_COG, Z_LANG, Z_MOT, Z_SEM, Z_OVERALL,
              COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
              COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
-             COG_flag, LANG_flag, MOT_flag, OVERALL_flag, NOTES)
+             COG_flag, LANG_flag, MOT_flag, SEM_flag, OVERALL_flag, NOTES)
 
   #Sanitize Short Form data
   if(is_sf == TRUE){
