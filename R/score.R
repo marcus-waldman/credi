@@ -72,9 +72,9 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
   # Load in the response data, if not bypassed
   csv_wd = getwd()
+  on.exit(setwd(csv_wd))
   if(bypass == FALSE){
-    out_dlgOpen = dlgOpen(title = "Select the .csv file with the CREDI response data",
-                          filters = c("csv", "*.csv"))
+    out_dlgOpen = dlgOpen(title = "Select the .csv file with the CREDI response data")
     csv_file = out_dlgOpen$res
     if (!endsWith(tolower(csv_file), ".csv")){stop("Selected file is not a .csv file.", call. = FALSE)}
     csv_wd = paste(strsplit(csv_file,"/")[[1]][-length(strsplit(csv_file,"/")[[1]])],collapse = "/")

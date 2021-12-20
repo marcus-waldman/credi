@@ -153,11 +153,11 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
 
   # Check that all variables outside of ID and ignored variables are numeric
   classes <- as.data.frame(sapply(input_df, class)) %>%
-    tibble::rownames_to_column(var = "variable")
-    names(classes) <- c("var", "var.class")
+    mutate(var = names(input_df)) %>% 
+    rename(var.class = `sapply(input_df, class)`)
 
   classes <- classes %>%
-    dplyr::mutate(check.var = var %in% vecQnames) %>%
+    dplyr::mutate(check.var = var %in% vecQnames.SF) %>%
     dplyr::mutate(OK = if_else(check.var == TRUE & var != "ID",
                                ifelse(var.class %in% c("numeric", "logical", "integer"),
                                       TRUE, FALSE),NA))
