@@ -29,7 +29,10 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
 
   # Check to see if the input DF contains Short-Form variable names
   is_sf <- sum(names(input_df) %in% sf_lf_naming$SF_var) >= 1
-
+  if (is_sf){
+    log[[length(log)+1]] = "\n* Short Form variable names are detected. Only Overall Scores will be calculated. Note that variable names used in the log will reflect Long Form variable names. See Scoring Manual for variable naming equivalents."
+  }
+  
   # Ensure that there is a unique ID variable for each observations
   if (!"ID" %in% names(input_df)){
     stop = 1
