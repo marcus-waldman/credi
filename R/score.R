@@ -17,6 +17,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom readr read_csv
 #' @importFrom readr write_csv
+#' @importFrom dplyr rename
 #' @importFrom dplyr case_when
 #' @importFrom dplyr mutate
 #' @importFrom dplyr if_else
@@ -311,7 +312,10 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
              Z_COG, Z_LANG, Z_MOT, Z_SEM, Z_OVERALL,
              COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
              COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
-             COG_flag, LANG_flag, MOT_flag, SEM_flag, OVERALL_flag, NOTES)
+             COG_flag, LANG_flag, MOT_flag, SEM_flag, OVERALL_flag, NOTES) %>% 
+    mutate(OVERALL = as.numeric(OVERALL),
+           Z_OVERALL = as.numeric(Z_OVERALL),
+           OVERALL_SE = as.numeric(OVERALL_SE)) #Fix a weird issue where these are arrays!? 
 
   #Sanitize Short Form data
   if(is_sf == TRUE){
@@ -328,7 +332,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     out_csv = paste(strsplit(out_dlgDir$res,"/")[[1]],collapse = "/")
 
     if (!endsWith(out_csv,".csv")){out_csv = paste(out_csv, ".csv", sep = "")}
-    readr::write_csv(output_df, path = out_csv)
+    readr::write_csv(output_df, file = out_csv)
 
     log[length(log)+1] = paste("\n Scores written to ", out_csv,".", sep = "")
 
