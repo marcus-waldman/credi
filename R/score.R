@@ -33,6 +33,7 @@
 #' @importFrom stats optim
 #' @importFrom stats var
 #' @importFrom dplyr starts_with
+#' @importFrom dplyr rename
 #' @importFrom dplyr ends_with
 #' @importFrom utils setTxtProgressBar
 #' @importFrom utils txtProgressBar

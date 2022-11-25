@@ -63,6 +63,24 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
     return(out_list)
   }
 
+  #Zap attributes of data so a df is processed smoothly
+  zap_attributes=function(x){
+    require(haven)
+    if(is.character(x)){x = haven::zap_empty(x)}
+    x_zapped = x %>% haven::zap_labels() %>% haven::zap_label()
+    return(x_zapped)
+  }
+  
+  # NOTE: Warning does not work for some reason--logical always returns same response
+  # Unable to replicate in global environment. Want to fix this later so we 
+  # can issue a warning in the log incase attributes are removed. 
+  # if(!setequal(zap_attributes(input_df), input_df)){
+  #   message = "Warning: Attributes from the input data were removed in order to process without error."
+  #   log[[length(log)+1]] = message
+  # }
+  
+  input_df <- zap_attributes(input_df)
+  
   #Ignore variables that will not be used during scoring
   vecQnames = c(mest_df$Item, mest_df$CREDI_code, mest_df$CREDI_code_Apr17)
   vecQnames = c("ID","AGE",vecQnames[complete.cases(vecQnames)])
