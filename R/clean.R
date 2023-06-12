@@ -7,9 +7,10 @@
 #' @param reverse_code (logical). If TRUE, then reverse codes LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then no reverse coding is applied.
 #' @param log (string) Name of the *.txt log file for the CREDI scoring.
 #' @param min_items (integer) Default to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.
+#' @param dscore (Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.
 #' @keywords internal
 
-clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
+clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, dscore){
   # Input:
   #  input_df - User defined input file, with:
   #                 a) LF item naming convention needed.
@@ -21,7 +22,19 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
   # Output: List with the following:
   #  cleaned_df - Cleaned data (i.e., missing data codes, reverse coding as necessary)
   #  items_noresponse - character vector with items missing all responses
-    
+  
+  ##### FOR TESTING ######
+  # input_df = mygrid
+  # mest_df = mest_df
+  # reverse_code = TRUE
+  # interactive = FALSE
+  # log = list(c("------------------------------------"), c("Log for CREDI Scoring Messages"),
+  #            paste("Date:", Sys.time()), c("------------------------------------"))
+  # min_items = 5
+  # dscore = TRUE
+  #### COMMENT ME OUT ####
+  
+  
   stop = 0
 
   # Make all variable names uppercase
@@ -151,18 +164,19 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
 
   vnfreq_new = data.frame(table(rename_df$new)); names(vnfreq_new) = c("new","freq_new")
   rename_df = merge(x = rename_df, y = vnfreq_new, by = "new", all.x = TRUE, all.y = TRUE, sort = FALSE)
-
-  # inds = which(rename_df$freq_new>1)
-  # if (length(inds)>0){
-  #   stop = 1
-  #   stop_message = "Error: When recoding variable names to the latest convention, one or more of the original
-  #   variables mapped to the same recoded variable."
-  #   tmp = c("original.variable --> recoded.variable")
-  #   for (iii in 1:length(inds)){
-  #     tmp = c(tmp, paste(rename_df$orig[inds[iii]], rename_df$new[inds[iii]], sep = " --> "))
-  #   }
-  #   log[[length(log)+1]]  = c(stop_message, tmp)
-  # }
+  
+  # We allow redundant SF names because there are multiple SF codings for a LF coding
+  inds = which(rename_df$freq_new>1)
+  if (length(inds)>0 & is_sf == FALSE){
+    stop = 1
+    stop_message = "Error: When recoding variable names to the latest convention, one or more of the original
+    variables mapped to the same recoded variable."
+    tmp = c("original.variable --> recoded.variable")
+    for (iii in 1:length(inds)){
+      tmp = c(tmp, paste(rename_df$orig[inds[iii]], rename_df$new[inds[iii]], sep = " --> "))
+    }
+    log[[length(log)+1]]  = c(stop_message, tmp)
+  }
 
   if (stop == 1){
     out_list = list(cleaned_df = NULL, items_noresponse = NULL, stop = stop, log = log)
@@ -170,7 +184,55 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
   }
 
   # Finally recode the variable
-  names(input_df) = rename_df$new
+  if(is_sf == FALSE) {
+    names(input_df) = rename_df$new
+  } else {
+    #There are multiple SF variables that code to the LF form, we need to resolve this.
+    recode_sf_lf <- function(varname) {
+      if(varname %in% sf_lf_naming$SF_var){
+        sf_lf_naming$LF[match(varname, sf_lf_naming$SF_var)]
+      } else {
+        return(varname)
+      }
+    }
+    
+    #Subset each Age form and rename variables before stacking back together
+    input_df_sf <- input_df %>% 
+      mutate(age_group = ifelse(AGE <= 5, "A",
+                                ifelse(AGE <= 11, "B",
+                                       ifelse(AGE <= 17, "C",
+                                              ifelse(AGE <= 23, "D",
+                                                     ifelse(AGE <= 29, "E",
+                                                            ifelse(AGE <= 36, "F", NA)))))))
+    
+    sf_df_a <- input_df_sf %>%
+      filter(age_group == "A") %>% 
+      select(AGE, ID, starts_with("CREDI_A"))
+      names(sf_df_a) <- as.character(sapply(names(sf_df_a), recode_sf_lf))    
+    sf_df_b <- input_df_sf %>%
+      filter(age_group == "B") %>% 
+      select(AGE, ID, starts_with("CREDI_B"))
+      names(sf_df_b) <- as.character(sapply(names(sf_df_b), recode_sf_lf))    
+    sf_df_c <- input_df_sf %>%
+      filter(age_group == "C") %>% 
+      select(AGE, ID, starts_with("CREDI_C"))
+      names(sf_df_c) <- as.character(sapply(names(sf_df_c), recode_sf_lf))          
+    sf_df_d <- input_df_sf %>%
+      filter(age_group == "D") %>% 
+      select(AGE, ID, starts_with("CREDI_D"))
+      names(sf_df_d) <- as.character(sapply(names(sf_df_d), recode_sf_lf))          
+    sf_df_e <- input_df_sf %>%
+      filter(age_group == "E") %>% 
+      select(AGE, ID, starts_with("CREDI_E"))
+      names(sf_df_e) <- as.character(sapply(names(sf_df_e), recode_sf_lf))          
+    sf_df_f <- input_df_sf %>%
+      filter(age_group == "F") %>% 
+      select(AGE, ID, starts_with("CREDI_F"))
+      names(sf_df_f) <- as.character(sapply(names(sf_df_f), recode_sf_lf))          
+      
+    sf_df <- bind_rows(sf_df_a, sf_df_b, sf_df_c, sf_df_d, sf_df_e, sf_df_f)
+    input_df <- sf_df
+  }
 
   # Check that all variables outside of ID and ignored variables are numeric
   classes <- as.data.frame(sapply(input_df, class)) %>%
@@ -295,7 +357,9 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
   N = nrow(input_df)
   cleaned_df = data.frame(mat.or.vec(nr = N, nc = nrow(mest_df)+2)+NA)
   names(cleaned_df) = c("ID","AGE", mest_df$CREDI_code)
-  cleaned_df$ID = input_df$ID; cleaned_df$AGE = input_df$AGE
+  cleaned_df$ID = input_df$ID
+  cleaned_df$AGE = input_df$AGE
+
   for (j in cols_Q){
 
     # Only bring in answers that are 1 or 0. Otherwise keep missing
@@ -312,7 +376,7 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
 
   #Create an object of items that are missing to ignore while scoring
   items_noresponse = row.names(miss_df)[miss_df$Pct_Missing==100]
-
+  
   inds_order = sort(miss_df$Pct_Missing, decreasing = TRUE, index.return = TRUE)
   miss_df2 = data.frame(Item = row.names(miss_df)[inds_order$ix], Pct_Missing = miss_df$Pct_Missing[inds_order$ix])
 
@@ -346,37 +410,36 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items){
 
   }
 
-  #Create an SF df that only uses SF-age-appropriate items, and sets all else to NA
-  sf_df <- cleaned_df %>%
-    mutate(age_group = ifelse(AGE < 6, "A",
-                              ifelse(AGE < 11, "B",
-                                     ifelse(AGE < 17, "C",
-                                            ifelse(AGE < 24, "D",
-                                                   ifelse(AGE < 29, "E",
-                                                          ifelse(AGE < 36, "F", NA)))))))
-
-  sf_df_a <- sf_df %>%
-    filter(age_group == "A") %>%
-    select(c(sf_lf_naming$LF[sf_lf_naming$age_group == "A"], "ID", "AGE", "age_group"))
-  sf_df_b <- sf_df %>%
-    filter(age_group == "B") %>%
-    select(c(sf_lf_naming$LF[sf_lf_naming$age_group == "B"], "ID", "AGE", "age_group"))
-  sf_df_c <- sf_df %>%
-    filter(age_group == "C") %>%
-    select(c(sf_lf_naming$LF[sf_lf_naming$age_group == "C"], "ID", "AGE", "age_group"))
-  sf_df_d <- sf_df %>%
-    filter(age_group == "D") %>%
-    select(c(sf_lf_naming$LF[sf_lf_naming$age_group == "D"], "ID", "AGE", "age_group"))
-  sf_df_e <- sf_df %>%
-    filter(age_group == "E") %>%
-    select(c(sf_lf_naming$LF[sf_lf_naming$age_group == "E"], "ID", "AGE", "age_group"))
-  sf_df_f <- sf_df %>%
-    filter(age_group == "F") %>%
-    select(c(sf_lf_naming$LF[sf_lf_naming$age_group == "F"], "ID", "AGE", "age_group"))
-
-  sf_df <- bind_rows(sf_df_a, sf_df_b, sf_df_c, sf_df_d, sf_df_e, sf_df_f)
-
-  out_list = list(cleaned_df = cleaned_df, sf_df = sf_df, is_sf = is_sf, items_noresponse = items_noresponse, stop = stop, log = log)
+if(dscore == TRUE) {
+    
+  # Calculate the d-score to return alongside CREDI scores
+  get_gsed_name <- function(varname) {
+    if(varname %in% gsed_name_key$credi_lf){
+      gsed_name_key$gsed[match(varname, gsed_name_key$credi_lf)]
+    } else {
+      return(varname)
+    }
+  }
+  
+  # Rename variables to GSED conventions  
+  gsed_dat <- input_df
+  names(gsed_dat) <- as.character(sapply(names(gsed_dat), get_gsed_name))
+    
+  #Call the dscore package to calculate scores and output a scored dscore dataframe
+  gsed_dat <- cbind(gsed_dat, dscore::dscore(gsed_dat, xname = "AGE", xunit = "months", key = "gsed", metric = "dscore")) %>% 
+    rename(dscore = d, 
+           DAZ = daz,
+           dscore_sem = sem) %>% 
+    select(dscore, DAZ, dscore_sem, ID)
+    
+  } else {
+    
+    gsed_dat <- "No d-score calculated"
+    
+    }
+  
+  #Make list of objects
+  out_list = list(cleaned_df = cleaned_df, is_sf = is_sf, items_noresponse = items_noresponse, stop = stop, log = log, gsed_dat = gsed_dat)
 
   return(out_list)
 }

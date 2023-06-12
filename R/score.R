@@ -14,6 +14,7 @@
 #' @param reverse_code (Logical) Defaults to TRUE. If TRUE, then reverse coding is automated to appropriately handle the negatively worded items LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then the package assumes items are already reverse coded and no changes are applied prior to scoring.
 #' @param interactive (Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.
 #' @param min_items (integer) Defaults to 5. The minimum number of scale-specific items (e.g. SEM, MOT, etc.) required for a score to be calculated.
+#' @param dscore (Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.
 #' @importFrom magrittr %>%
 #' @importFrom readr read_csv
 #' @importFrom readr write_csv
@@ -39,6 +40,7 @@
 #' @importFrom utils txtProgressBar
 #' @importFrom svDialogs dlgOpen
 #' @importFrom svDialogs dlgSave
+#' @importFrom dscore dscore
 #' @export
 #' @examples
 #' #Create a sample dataframe
@@ -56,7 +58,7 @@
 #' #42.058 45.049 43.755 44.250  38.16
 #' #One observation did not have at least 5 items responded to, so is not included in the results
 
-score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5){
+score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5, dscore = FALSE){
 
   # Identify if dialog specifying .csv file should be bypassed.
   bypass = ifelse(is.null(data), FALSE, TRUE)
@@ -95,7 +97,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
   #Use the clean function to clean the DF
   list_cleaned = clean(input_df = input_df, mest_df = mest_df, reverse_code = reverse_code,
-                       interactive = interactive, log = log, min_items = min_items)
+                       interactive = interactive, log = log, min_items = min_items, dscore = dscore)
   log = list_cleaned$log
   if(list_cleaned$stop!=0){
 
@@ -126,7 +128,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   } # End if stop != 0
 
   cleaned_df = list_cleaned$cleaned_df
-  sf_df = list_cleaned$sf_df
+  #sf_df = list_cleaned$sf_df
   is_sf = list_cleaned$is_sf
   items_noresponse = list_cleaned$items_noresponse
 
@@ -134,7 +136,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   X = model.matrix(~1 + I( (AGE-18)/10.39 ) + I( ((AGE-18)/10.39)^2 ) + I( ((AGE-18)/10.39)^3 ), data = cleaned_df)
   X_4 = model.matrix(~1 + I( (AGE-18)/10.39 ) + I( ((AGE-18)/10.39)^2 ) + I( ((AGE-18)/10.39)^3 ) + I( ((AGE-18)/10.39)^4 ), data = cleaned_df)
   Y = as.matrix(cleaned_df[,-match(c("ID","AGE",items_noresponse), names(cleaned_df))]); Y[is.na(Y)] = -9L
-  Y_sf = as.matrix(sf_df[,-na.omit(match(c("ID","AGE","age_group",items_noresponse), names(sf_df)))]); Y_sf[is.na(Y_sf)] = -9L
+  #Y_sf = as.matrix(sf_df[,-na.omit(match(c("ID","AGE","age_group",items_noresponse), names(sf_df)))]); Y_sf[is.na(Y_sf)] = -9L
   MU_LF = X%*%as.matrix(B) #NxK (matrix)
   MU_SF = X%*%as.numeric(beta) #Nx1
 
@@ -323,7 +325,15 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     output_scored <- output_scored %>%
       select(ID, OVERALL, OVERALL_SE, Z_OVERALL, NOTES)
   }
-
+  
+  #Sanitize GSED data
+  if(dscore == TRUE){
+    dscores <- list_cleaned$gsed_dat %>%
+      left_join(input_df, by = "ID")
+  } else {
+    dscores <- "No d-scores generated."
+  }
+  
   #Write out the output df
   output_df = merge(x = input_df, y = output_scored, by = "ID") #re-merge with original data.
 
@@ -346,5 +356,5 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
   }
 
-  return(list(scores = output_df, log = log))
+  return(list(scores = output_df, log = log, dscores = dscores))
 }

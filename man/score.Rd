@@ -4,7 +4,13 @@
 \alias{score}
 \title{Score CREDI response data}
 \usage{
-score(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5)
+score(
+  data = NULL,
+  reverse_code = TRUE,
+  interactive = TRUE,
+  min_items = 5,
+  dscore = FALSE
+)
 }
 \arguments{
 \item{data}{(data.frame) Defaults to NULL. Response data. If NULL, then user is prompted to identify a .csv file with response data. Defaults to NULL.}
@@ -14,6 +20,8 @@ score(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5)
 \item{interactive}{(Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.}
 
 \item{min_items}{(integer) Defaults to 5. The minimum number of scale-specific items (e.g. SEM, MOT, etc.) required for a score to be calculated.}
+
+\item{dscore}{(Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.}
 }
 \description{
 This function calculates the posterior density function and provides CREDI Overall, Short Form, and domain-specific scores. 

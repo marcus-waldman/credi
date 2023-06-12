@@ -20,4 +20,4 @@ Imports: svDialogs (>= 1.0.0),
 	 dplyr (>= 1.0.5),
 	 magrittr (>= 2.0.1)
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2

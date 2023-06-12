@@ -4,7 +4,7 @@
 \alias{clean}
 \title{Clean input CREDI response data}
 \usage{
-clean(input_df, mest_df, reverse_code, interactive, log, min_items)
+clean(input_df, mest_df, reverse_code, interactive, log, min_items, dscore)
 }
 \arguments{
 \item{input_df}{(data.frame) Raw input data from the user-specified csv file.}
@@ -16,6 +16,8 @@ clean(input_df, mest_df, reverse_code, interactive, log, min_items)
 \item{log}{(string) Name of the *.txt log file for the CREDI scoring.}
 
 \item{min_items}{(integer) Default to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.}
+
+\item{dscore}{(Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.}
 
 \item{csv_wd}{(string) Working directory where input *.csv file is located.}
 }
