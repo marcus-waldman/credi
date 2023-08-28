@@ -198,11 +198,11 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
     
     #Subset each Age form and rename variables before stacking back together
     input_df_sf <- input_df %>% 
-      mutate(age_group = ifelse(AGE <= 5, "A",
-                                ifelse(AGE <= 11, "B",
-                                       ifelse(AGE <= 17, "C",
-                                              ifelse(AGE <= 23, "D",
-                                                     ifelse(AGE <= 29, "E",
+      mutate(age_group = ifelse(AGE < 6, "A",
+                                ifelse(AGE < 12, "B",
+                                       ifelse(AGE < 18, "C",
+                                              ifelse(AGE < 24, "D",
+                                                     ifelse(AGE < 30, "E",
                                                             ifelse(AGE <= 36, "F", NA)))))))
     
     sf_df_a <- input_df_sf %>%
