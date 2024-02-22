@@ -24,7 +24,7 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
   #  items_noresponse - character vector with items missing all responses
   
   ##### FOR TESTING ######
-  # input_df = mygrid
+  # input_df = read_xlsx("C:/Users/Jonat/OneDrive - Harvard University/GSED work/DADOS_CORRETOS_CREDI_PARA_PONTUACAO_SOMENTE_CODIGOS.xlsx")
   # mest_df = mest_df
   # reverse_code = TRUE
   # interactive = FALSE
@@ -425,7 +425,11 @@ if(dscore == TRUE) {
   gsed_dat <- input_df
   names(gsed_dat) <- as.character(sapply(names(gsed_dat), get_gsed_name))
     
-  #Call the dscore package to calculate scores and output a scored dscore dataframe
+  # Ensure all GSED variables are cleaned
+  gsed_dat <-gsed_dat %>% 
+    mutate(across(starts_with("cro"), ~ifelse(.x %in% c(0,1), .x, NA)))
+  
+  # Call the dscore package to calculate scores and output a scored dscore dataframe
   gsed_dat <- cbind(gsed_dat, dscore::dscore(gsed_dat, xname = "AGE", xunit = "months", key = "gsed", metric = "dscore")) %>% 
     rename(dscore = d, 
            DAZ = daz,

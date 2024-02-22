@@ -60,6 +60,8 @@
 
 score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5, dscore = FALSE){
 
+  # NOTE: KENJI will add a prior variance parameter to the function call
+  
   # Identify if dialog specifying .csv file should be bypassed.
   bypass = ifelse(is.null(data), FALSE, TRUE)
   if (bypass == TRUE){
@@ -161,7 +163,9 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   N = as.integer(nrow(Y))
   invS = as.matrix(invS)
   SIGMA_SQ= exp(X%*%as.numeric(gamma))
-
+    # NOTE: KENJI will convert to constant variance by age. 
+  
+  
   # initialize the theta values
   THETA0_LF = MU_LF #NxK (matrix)
   THETA0_SF = MU_SF #Nx1 (matrix)
