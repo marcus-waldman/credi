@@ -380,7 +380,7 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
   inds_order = sort(miss_df$Pct_Missing, decreasing = TRUE, index.return = TRUE)
   miss_df2 = data.frame(Item = row.names(miss_df)[inds_order$ix], Pct_Missing = miss_df$Pct_Missing[inds_order$ix])
 
-  if (length(items_noresponse)>0){
+  if (length(items_noresponse)>0 & !is_sf){
     log[[length(log)+1]]  = c(paste("\nThe following items on the long form contained missing responses from all individuals: ",
                        paste(subset(miss_df2, Pct_Missing==100)$Item, collapse = ", "), sep = ""))
   }
