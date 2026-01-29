@@ -18,7 +18,7 @@ which_scores<-function(Yi, mest_df = mest_df, min_items = min_items){
   J_cog_i = sum(items_i %in% mest_df[mest_df$COG>0,"CREDI_code"] )
   J_lang_i = sum(items_i %in% mest_df[mest_df$LANG>0,"CREDI_code"] )
   J_sem_i = sum(items_i %in% mest_df[mest_df$SEM>0,"CREDI_code"] )
-  J_sf_i = sum(items_i %in% mest_df[mest_df$ShortForm==T,"CREDI_code"] )
+  J_sf_i = sum(items_i %in% mest_df[mest_df$ShortForm,"CREDI_code"] )
   J_overall_i = sum(items_i %in%mest_df[mest_df$alpha>0,"CREDI_code"])
 
   #Return a logical data frame with scales to include for the individual

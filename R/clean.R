@@ -24,16 +24,22 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
   #  items_noresponse - character vector with items missing all responses
   
   ##### FOR TESTING ######
-  # input_df = mygrid
+  # input_df =   input_df <- data.frame(
+  #   ID = 1:3, AGE = c(32,40,43), LF100 = c(1,0,NA), LF101 = c(0,0,0), 
+  #   LF102 = c(1,0,1), LF103 = c(1,1,1), LF105 = c(1,0,0)
+  # )
+  # input_df =   input_df <- data.frame(
+  #   ID = 1:3, AGE = c(40,41,42), LF100 = c(1,1,1), LF101 = c(0,0,0), 
+  #   LF102 = c(1,1,1), LF103 = c(1,1,1), LF105 = c(0,0,0)
+  # )
   # mest_df = mest_df
   # reverse_code = TRUE
   # interactive = FALSE
   # log = list(c("------------------------------------"), c("Log for CREDI Scoring Messages"),
   #            paste("Date:", Sys.time()), c("------------------------------------"))
   # min_items = 5
-  # dscore = TRUE
-  #### COMMENT ME OUT ####
-  
+  # dscore = FALSE
+  #### COMMENT ME OUT ###
   
   stop = 0
 
@@ -276,10 +282,10 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
 
   # Age outside of range.
   if (nrow(input_df)>0){
-    rows_out_age = which(input_df$AGE<0 | input_df$AGE>36)
+    rows_out_age = which(input_df$AGE<0 | input_df$AGE>42)
     if (length(rows_out_age)>0){
       log[[length(log)+1]] =
-      dr = dr+1; discard_df$Reason[dr] = "Age values outside of 0-36 months"; discard_df$Number[dr] = length(rows_out_age)
+      dr = dr+1; discard_df$Reason[dr] = "Age values outside of 0-42 months"; discard_df$Number[dr] = length(rows_out_age)
       input_df = input_df[-rows_out_age, ]
     }
   }
@@ -440,6 +446,6 @@ if(dscore == TRUE) {
   
   #Make list of objects
   out_list = list(cleaned_df = cleaned_df, is_sf = is_sf, items_noresponse = items_noresponse, stop = stop, log = log, gsed_dat = gsed_dat)
-
+  
   return(out_list)
 }

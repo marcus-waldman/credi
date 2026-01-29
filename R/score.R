@@ -98,7 +98,9 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   #Use the clean function to clean the DF
   list_cleaned = clean(input_df = input_df, mest_df = mest_df, reverse_code = reverse_code,
                        interactive = interactive, log = log, min_items = min_items, dscore = dscore)
+  #list_cleaned = out_list
   log = list_cleaned$log
+  
   if(list_cleaned$stop!=0){
 
     #print("*Error: Processing the provided response data resulted in errors. See log for more details.")
@@ -187,21 +189,26 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
   FLAGS <- t(sapply(1:nrow(Y), get.flags))
 
-#i = 1
+# Output notes on flags and which scores are reported
   for (i in 1:N){
 
     scales_i = which_scores(Y[i,], mest_df, min_items)
 
     notes_i = ""
-
+    
+    # Note if age is outside of reference range
+    if(AGE$AGE[i] > 36){
+      notes_i = "Age is between 36 and 42 months. CREDI has not been validated for children in this age range and no Z-scores are produced."
+    }
+    
     if(prod(as.numeric(scales_i[1,]))==0){
       if(list_cleaned$is_sf){
         notes_i = paste0(notes_i, "Only responses to short form items detected. Therefore, scoring will produce only a CREDI-SF score.")
-        if (scales_i$SF==F){
+        if(!scales_i$SF){
           notes_i = paste0(notes_i, "Warning: Fewer than ", min_items," were recorded for this observation. No score generated.")
         }
       } else {
-        notes_i = paste0(notes_i, "The following domains did not have at least ", min_items," observed for this observation and may be innacurate: ", paste0(names(scales_i)[scales_i[1,]==FALSE], collapse = ", "),"." )
+        notes_i = paste0(notes_i, "The following domains did not have at least ", min_items," observed for this observation and may be innacurate: ", paste0(names(scales_i)[2:5][scales_i[1,2:5]==FALSE], collapse = ", "),"." )
       }
 
     }
@@ -304,8 +311,8 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     mutate(AGE = floor(AGE))
 
   output_scored <- output_scored %>%
-    merge(AGE, by = "ID") %>%
-    merge(zscoredat, by = "AGE") %>%
+    left_join(AGE, by = "ID") %>% 
+    left_join(zscoredat, by = "AGE") %>%
     mutate(Z_OVERALL = (OVERALL - OVERALL_mu) / OVERALL_sigma,
            Z_COG = (COG - COG_mu) / COG_sigma,
            Z_LANG = (LANG - LANG_mu) / LANG_sigma,
@@ -319,7 +326,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     mutate(OVERALL = as.numeric(OVERALL),
            Z_OVERALL = as.numeric(Z_OVERALL),
            OVERALL_SE = as.numeric(OVERALL_SE)) #Fix a weird issue where these are arrays!? 
-
+  
   #Sanitize Short Form data
   if(is_sf == TRUE){
     output_scored <- output_scored %>%
