@@ -197,7 +197,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     notes_i = ""
     
     # Note if age is outside of reference range
-    if(AGE$AGE[i] > 36){
+    if(cleaned_df$AGE[i] > 36){
       notes_i = "Age is between 36 and 42 months. CREDI has not been validated for children in this age range and no Z-scores are produced."
     }
     
