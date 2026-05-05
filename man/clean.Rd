@@ -18,8 +18,6 @@ clean(input_df, mest_df, reverse_code, interactive, log, min_items, dscore)
 \item{min_items}{(integer) Default to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.}
 
 \item{dscore}{(Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.}
-
-\item{csv_wd}{(string) Working directory where input *.csv file is located.}
 }
 \description{
 This takes raw CREDI data and pre-processes it for scoring. This function is used by the `score` function and is not typically used directly by a user.

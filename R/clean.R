@@ -3,11 +3,11 @@
 #' This takes raw CREDI data and pre-processes it for scoring. This function is used by the `score` function and is not typically used directly by a user.
 #' @param input_df (data.frame) Raw input data from the user-specified csv file.
 #' @param mest_df (data.frame) Measurement parameter estimates.
-#' @param csv_wd (string) Working directory where input *.csv file is located.
 #' @param reverse_code (logical). If TRUE, then reverse codes LF9, LF102, LFMH1, LFMH2, LFMH3, LFMH4, LFMH5, LFMH7, LFMH8, & LFMH9. If FALSE, then no reverse coding is applied.
 #' @param log (string) Name of the *.txt log file for the CREDI scoring.
 #' @param min_items (integer) Default to 5. The minimum number of scale-specific items (e.g., SF, MOT, etc.) required for a score to be calculated.
 #' @param dscore (Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.
+#' @importFrom haven zap_empty zap_labels zap_label
 #' @keywords internal
 
 clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, dscore){
@@ -22,24 +22,6 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
   # Output: List with the following:
   #  cleaned_df - Cleaned data (i.e., missing data codes, reverse coding as necessary)
   #  items_noresponse - character vector with items missing all responses
-  
-  ##### FOR TESTING ######
-  # input_df =   input_df <- data.frame(
-  #   ID = 1:3, AGE = c(32,40,43), LF100 = c(1,0,NA), LF101 = c(0,0,0), 
-  #   LF102 = c(1,0,1), LF103 = c(1,1,1), LF105 = c(1,0,0)
-  # )
-  # input_df =   input_df <- data.frame(
-  #   ID = 1:3, AGE = c(40,41,42), LF100 = c(1,1,1), LF101 = c(0,0,0), 
-  #   LF102 = c(1,1,1), LF103 = c(1,1,1), LF105 = c(0,0,0)
-  # )
-  # mest_df = mest_df
-  # reverse_code = TRUE
-  # interactive = FALSE
-  # log = list(c("------------------------------------"), c("Log for CREDI Scoring Messages"),
-  #            paste("Date:", Sys.time()), c("------------------------------------"))
-  # min_items = 5
-  # dscore = FALSE
-  #### COMMENT ME OUT ###
   
   stop = 0
 
@@ -82,22 +64,11 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
     return(out_list)
   }
 
-  #Zap attributes of data so a df is processed smoothly
-  zap_attributes=function(x){
-    require(haven)
-    if(is.character(x)){x = haven::zap_empty(x)}
-    x_zapped = x %>% haven::zap_labels() %>% haven::zap_label()
-    return(x_zapped)
+  # Remove haven/Stata attributes so the data frame processes cleanly
+  zap_attributes <- function(x) {
+    if (is.character(x)) x <- haven::zap_empty(x)
+    x %>% haven::zap_labels() %>% haven::zap_label()
   }
-  
-  # NOTE: Warning does not work for some reason--logical always returns same response
-  # Unable to replicate in global environment. Want to fix this later so we 
-  # can issue a warning in the log incase attributes are removed. 
-  # if(!setequal(zap_attributes(input_df), input_df)){
-  #   message = "Warning: Attributes from the input data were removed in order to process without error."
-  #   log[[length(log)+1]] = message
-  # }
-  
   input_df <- zap_attributes(input_df)
   
   #Ignore variables that will not be used during scoring
@@ -195,49 +166,34 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
   } else {
     #There are multiple SF variables that code to the LF form, we need to resolve this.
     recode_sf_lf <- function(varname) {
-      if(varname %in% sf_lf_naming$SF_var){
+      if (varname %in% sf_lf_naming$SF_var) {
         sf_lf_naming$LF[match(varname, sf_lf_naming$SF_var)]
       } else {
-        return(varname)
+        varname
       }
     }
-    
-    #Subset each Age form and rename variables before stacking back together
-    input_df_sf <- input_df %>% 
-      mutate(age_group = ifelse(AGE < 6, "A",
-                                ifelse(AGE < 12, "B",
-                                       ifelse(AGE < 18, "C",
-                                              ifelse(AGE < 24, "D",
-                                                     ifelse(AGE < 30, "E",
-                                                            ifelse(AGE <= 36, "F", NA)))))))
-    
-    sf_df_a <- input_df_sf %>%
-      filter(age_group == "A") %>% 
-      select(AGE, ID, starts_with("CREDI_A"))
-      names(sf_df_a) <- as.character(sapply(names(sf_df_a), recode_sf_lf))    
-    sf_df_b <- input_df_sf %>%
-      filter(age_group == "B") %>% 
-      select(AGE, ID, starts_with("CREDI_B"))
-      names(sf_df_b) <- as.character(sapply(names(sf_df_b), recode_sf_lf))    
-    sf_df_c <- input_df_sf %>%
-      filter(age_group == "C") %>% 
-      select(AGE, ID, starts_with("CREDI_C"))
-      names(sf_df_c) <- as.character(sapply(names(sf_df_c), recode_sf_lf))          
-    sf_df_d <- input_df_sf %>%
-      filter(age_group == "D") %>% 
-      select(AGE, ID, starts_with("CREDI_D"))
-      names(sf_df_d) <- as.character(sapply(names(sf_df_d), recode_sf_lf))          
-    sf_df_e <- input_df_sf %>%
-      filter(age_group == "E") %>% 
-      select(AGE, ID, starts_with("CREDI_E"))
-      names(sf_df_e) <- as.character(sapply(names(sf_df_e), recode_sf_lf))          
-    sf_df_f <- input_df_sf %>%
-      filter(age_group == "F") %>% 
-      select(AGE, ID, starts_with("CREDI_F"))
-      names(sf_df_f) <- as.character(sapply(names(sf_df_f), recode_sf_lf))          
-      
-    sf_df <- bind_rows(sf_df_a, sf_df_b, sf_df_c, sf_df_d, sf_df_e, sf_df_f)
-    input_df <- sf_df
+
+    # Assign age group label based on age thresholds
+    input_df_sf <- input_df %>%
+      mutate(age_group = dplyr::case_when(
+        AGE < 6  ~ "A",
+        AGE < 12 ~ "B",
+        AGE < 18 ~ "C",
+        AGE < 24 ~ "D",
+        AGE < 30 ~ "E",
+        AGE <= 36 ~ "F"
+      ))
+
+    # Subset each age form, rename SF variables to LF equivalents, then recombine
+    sf_age_letters <- c("A", "B", "C", "D", "E", "F")
+    sf_dfs <- lapply(sf_age_letters, function(letter) {
+      df <- input_df_sf %>%
+        filter(age_group == letter) %>%
+        select(AGE, ID, starts_with(paste0("CREDI_", letter)))
+      names(df) <- as.character(sapply(names(df), recode_sf_lf))
+      df
+    })
+    input_df <- bind_rows(sf_dfs)
   }
 
   # Check that all variables outside of ID and ignored variables are numeric
@@ -281,12 +237,17 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
   }
 
   # Age outside of range.
-  if (nrow(input_df)>0){
-    rows_out_age = which(input_df$AGE<0 | input_df$AGE>42)
-    if (length(rows_out_age)>0){
-      log[[length(log)+1]] =
-      dr = dr+1; discard_df$Reason[dr] = "Age values outside of 0-42 months"; discard_df$Number[dr] = length(rows_out_age)
-      input_df = input_df[-rows_out_age, ]
+  if (nrow(input_df) > 0) {
+    rows_out_age <- which(input_df$AGE < 0 | input_df$AGE > 42)
+    if (length(rows_out_age) > 0) {
+      log[[length(log)+1]] <- paste0(
+        "Warning: ", length(rows_out_age),
+        " observation(s) have AGE values outside of 0-42 months and cannot be scored (ID = ",
+        paste(input_df$ID[rows_out_age], collapse = ", "), ")")
+      dr <- dr + 1
+      discard_df$Reason[dr] <- "Age values outside of 0-42 months"
+      discard_df$Number[dr] <- length(rows_out_age)
+      input_df <- input_df[-rows_out_age, ]
     }
   }
 
@@ -331,7 +292,7 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
     log[[length(log)+1]] =  paste("Warning:  A total of ", N_discarded, " (", Pct_discarded,"%) observation(s) cannot be scored for the following reason(s):",sep ="")
     log[[length(log)+1]] = discard_df[complete.cases(discard_df), ]
 
-    if (interactive == FALSE){
+    if (!interactive) {
       x = "Y"
     } else {
       print(paste("Warning:  A total of ", N_discarded, " (", Pct_discarded,"%) observation(s) cannot be scored for the following reason(s):",sep =""))
@@ -400,7 +361,7 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
 
   # Reverse code items that need it
   reversed_items = NULL
-  if (reverse_code == TRUE){
+  if (reverse_code) {
     # Reverse code as needed
     items_reverse = mest_df$CREDI_code[mest_df$RevCoded]
     cols_reverse = which(!is.na(match(names(cleaned_df),items_reverse)))
@@ -416,33 +377,27 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
 
   }
 
-if(dscore == TRUE) {
-    
-  # Calculate the d-score to return alongside CREDI scores
-  get_gsed_name <- function(varname) {
-    if(varname %in% gsed_name_key$credi_lf){
-      gsed_name_key$gsed[match(varname, gsed_name_key$credi_lf)]
-    } else {
-      return(varname)
+  if (dscore) {
+    # Calculate the d-score to return alongside CREDI scores
+    get_gsed_name <- function(varname) {
+      if (varname %in% get_gsed_name$credi_lf) {
+        gsed_name_key$gsed[match(varname, gsed_name_key$credi_lf)]
+      } else {
+        varname
+      }
     }
-  }
-  
-  # Rename variables to GSED conventions  
-  gsed_dat <- input_df
-  names(gsed_dat) <- as.character(sapply(names(gsed_dat), get_gsed_name))
-    
-  #Call the dscore package to calculate scores and output a scored dscore dataframe
-  gsed_dat <- cbind(gsed_dat, dscore::dscore(gsed_dat, xname = "AGE", xunit = "months", key = "gsed", metric = "dscore")) %>% 
-    rename(dscore = d, 
-           DAZ = daz,
-           dscore_sem = sem) %>% 
-    select(dscore, DAZ, dscore_sem, ID)
-    
+
+    # Rename variables to GSED conventions and calculate d-scores
+    gsed_dat <- input_df
+    names(gsed_dat) <- as.character(sapply(names(gsed_dat), get_gsed_name))
+    gsed_dat <- cbind(gsed_dat, dscore::dscore(gsed_dat, xname = "AGE", xunit = "months", key = "gsed2406", metric = "dscore")) %>%
+      rename(dscore = d,
+             DAZ = daz,
+             dscore_sem = sem) %>%
+      select(dscore, DAZ, dscore_sem, ID)
   } else {
-    
     gsed_dat <- "No d-score calculated"
-    
-    }
+  }
   
   #Make list of objects
   out_list = list(cleaned_df = cleaned_df, is_sf = is_sf, items_noresponse = items_noresponse, stop = stop, log = log, gsed_dat = gsed_dat)

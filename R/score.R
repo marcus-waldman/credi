@@ -27,15 +27,14 @@
 #' @importFrom dplyr select
 #' @importFrom dplyr n_distinct
 #' @importFrom dplyr left_join
+#' @importFrom dplyr starts_with
+#' @importFrom dplyr ends_with
 #' @importFrom tibble rownames_to_column
 #' @importFrom stats complete.cases
 #' @importFrom stats model.matrix
 #' @importFrom stats na.omit
 #' @importFrom stats optim
 #' @importFrom stats var
-#' @importFrom dplyr starts_with
-#' @importFrom dplyr rename
-#' @importFrom dplyr ends_with
 #' @importFrom utils setTxtProgressBar
 #' @importFrom utils txtProgressBar
 #' @importFrom svDialogs dlgOpen
@@ -61,9 +60,9 @@
 score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5, dscore = FALSE){
 
   # Identify if dialog specifying .csv file should be bypassed.
-  bypass = ifelse(is.null(data), FALSE, TRUE)
-  if (bypass == TRUE){
-    if (!is.data.frame(data)){
+  bypass <- !is.null(data)
+  if (bypass) {
+    if (!is.data.frame(data)) {
       stop("data argument must be type data.frame")
     }
   }
@@ -77,11 +76,11 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   # Load in the response data, if not bypassed
   csv_wd = getwd()
   on.exit(setwd(csv_wd))
-  if(bypass == FALSE){
+  if (!bypass) {
     out_dlgOpen = dlgOpen(title = "Select the .csv file with the CREDI response data")
     csv_file = out_dlgOpen$res
-    if (!endsWith(tolower(csv_file), ".csv")){stop("Selected file is not a .csv file.", call. = FALSE)}
-    csv_wd = paste(strsplit(csv_file,"/")[[1]][-length(strsplit(csv_file,"/")[[1]])],collapse = "/")
+    if (!endsWith(tolower(csv_file), ".csv")) stop("Selected file is not a .csv file.", call. = FALSE)
+    csv_wd <- dirname(csv_file)
     setwd(csv_wd)
     input_df = readr::read_csv(file = csv_file, col_types = readr::cols())
   } else {
@@ -98,47 +97,29 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   #Use the clean function to clean the DF
   list_cleaned = clean(input_df = input_df, mest_df = mest_df, reverse_code = reverse_code,
                        interactive = interactive, log = log, min_items = min_items, dscore = dscore)
-  #list_cleaned = out_list
   log = list_cleaned$log
   
-  if(list_cleaned$stop!=0){
-
-    #print("*Error: Processing the provided response data resulted in errors. See log for more details.")
+  if (list_cleaned$stop != 0) {
     return(list(log = log))
-
-    if (interactive == TRUE){
-      x<-as.character(readline(prompt = "Would you like to save a log file of warning and error messages? [Y/N]: "))
-      x <- toupper(x)
-      cut = 0
-      while(cut == 0){
-        if (x == "Y"){
-          cut = 1;
-        } else if (x == "N"){
-          cut = 1
-          stop("Scoring canceled.", call. = FALSE)
-        } else {
-          x<-as.character(readline(prompt = "Would you like to continue? [Y/N]:"))
-          x <- toupper(x)
-          cut = 0
-        }
-      } #end while
-      write_log(log = log, folder = csv_wd)
-    } #End if interactive
-
-    #return(list(log = log))
-
-  } # End if stop != 0
+  }
 
   cleaned_df = list_cleaned$cleaned_df
-  #sf_df = list_cleaned$sf_df
   is_sf = list_cleaned$is_sf
   items_noresponse = list_cleaned$items_noresponse
 
-  # Create data matricies
-  X = model.matrix(~1 + I( (AGE-18)/10.39 ) + I( ((AGE-18)/10.39)^2 ) + I( ((AGE-18)/10.39)^3 ), data = cleaned_df)
-  X_4 = model.matrix(~1 + I( (AGE-18)/10.39 ) + I( ((AGE-18)/10.39)^2 ) + I( ((AGE-18)/10.39)^3 ) + I( ((AGE-18)/10.39)^4 ), data = cleaned_df)
+  # Age polynomial design matrices (centered at 18 months, scaled by 10.39)
+  AGE_CENTER <- 18
+  AGE_SCALE  <- 10.39
+  X   <- model.matrix(~1 + I((AGE - AGE_CENTER) / AGE_SCALE) +
+                           I(((AGE - AGE_CENTER) / AGE_SCALE)^2) +
+                           I(((AGE - AGE_CENTER) / AGE_SCALE)^3),
+                      data = cleaned_df)
+  X_4 <- model.matrix(~1 + I((AGE - AGE_CENTER) / AGE_SCALE) +
+                           I(((AGE - AGE_CENTER) / AGE_SCALE)^2) +
+                           I(((AGE - AGE_CENTER) / AGE_SCALE)^3) +
+                           I(((AGE - AGE_CENTER) / AGE_SCALE)^4),
+                      data = cleaned_df)
   Y = as.matrix(cleaned_df[,-match(c("ID","AGE",items_noresponse), names(cleaned_df))]); Y[is.na(Y)] = -9L
-  #Y_sf = as.matrix(sf_df[,-na.omit(match(c("ID","AGE","age_group",items_noresponse), names(sf_df)))]); Y_sf[is.na(Y_sf)] = -9L
   MU_LF = X%*%as.matrix(B) #NxK (matrix)
   MU_SF = X%*%as.numeric(beta) #Nx1
 
@@ -157,10 +138,10 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   }
 
   # Obtain necessary constants
-  J = ncol(Y);
-  K = 4L
-  P = 3L
-  N = as.integer(nrow(Y))
+  J <- ncol(Y)
+  K <- 4L
+  P <- 3L
+  N <- as.integer(nrow(Y))
   invS = as.matrix(invS)
   SIGMA_SQ= exp(X%*%as.numeric(gamma))
 
@@ -172,7 +153,6 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   MAP_LF = 0.*THETA0_LF + NA
   MAP_SF = 0.*THETA0_SF + NA
   MAP_OVERALL = 0.*THETA0_SF + NA
-  # Z_LF = MAP_LF
   SE_LF = MAP_LF
   SE_SF = MAP_SF
   OVERALL_SE = MAP_OVERALL
@@ -287,9 +267,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
     }
 
-    if(!is.null(notes_i)){
-      NOTES[i] = notes_i
-    }
+    NOTES[i] <- notes_i
 
     setTxtProgressBar(pb, i)
   }
@@ -321,8 +299,7 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     select(ID, COG, LANG, MOT, SEM, OVERALL,
              Z_COG, Z_LANG, Z_MOT, Z_SEM, Z_OVERALL,
              COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
-             COG_SE, LANG_SE, MOT_SE, SEM_SE, OVERALL_SE,
-             COG_flag, LANG_flag, MOT_flag, SEM_flag, OVERALL_flag, NOTES) %>% 
+             COG_flag, LANG_flag, MOT_flag, SEM_flag, OVERALL_flag, NOTES) %>%
     mutate(OVERALL = as.numeric(OVERALL),
            Z_OVERALL = as.numeric(Z_OVERALL),
            OVERALL_SE = as.numeric(OVERALL_SE)) #Fix a weird issue where these are arrays!? 
@@ -345,22 +322,21 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   output_df = merge(x = input_df, y = output_scored, by = "ID") #re-merge with original data.
 
   # Write out the data
-  if(interactive == TRUE){
-    out_dlgDir = dlgSave(default = csv_wd, title = "Save scores as", gui = .GUI)
-    out_csv = paste(strsplit(out_dlgDir$res,"/")[[1]],collapse = "/")
+  if (interactive) {
+    out_dlgDir <- dlgSave(default = csv_wd, title = "Save scores as", gui = .GUI)
+    out_csv <- out_dlgDir$res
 
-    if (!endsWith(out_csv,".csv")){out_csv = paste(out_csv, ".csv", sep = "")}
+    if (!endsWith(out_csv, ".csv")) out_csv <- paste0(out_csv, ".csv")
     readr::write_csv(output_df, file = out_csv)
 
-    log[length(log)+1] = paste("\n Scores written to ", out_csv,".", sep = "")
+    log[[length(log)+1]] <- paste0("\n Scores written to ", out_csv, ".")
 
-    txt_wd = paste(strsplit(out_csv,"/")[[1]][-length(strsplit(out_csv,"/")[[1]])],collapse = "/")
-    out_txt = paste(txt_wd,"/logfile - CREDI scoring.txt", sep = "")
+    txt_wd <- dirname(out_csv)
+    out_txt <- file.path(txt_wd, "logfile - CREDI scoring.txt")
     write_log(log = log, folder = txt_wd, file = out_txt)
 
     writeLines("\n")
-    writeLines( paste("\n Scores written to ", out_csv,".", sep = "") )
-
+    writeLines(paste0("\n Scores written to ", out_csv, "."))
   }
 
   return(list(scores = output_df, log = log, dscores = dscores))
