@@ -380,7 +380,7 @@ clean<-function(input_df, mest_df, reverse_code, interactive, log, min_items, ds
   if (dscore) {
     # Calculate the d-score to return alongside CREDI scores
     get_gsed_name <- function(varname) {
-      if (varname %in% get_gsed_name$credi_lf) {
+      if (varname %in% gsed_name_key$credi_lf) {
         gsed_name_key$gsed[match(varname, gsed_name_key$credi_lf)]
       } else {
         varname
