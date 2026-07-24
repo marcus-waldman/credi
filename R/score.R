@@ -15,6 +15,8 @@
 #' @param interactive (Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.
 #' @param min_items (integer) Defaults to 5. The minimum number of scale-specific items (e.g. SEM, MOT, etc.) required for a score to be calculated.
 #' @param dscore (Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.
+#' @param ref (character) Defaults to "20260724" for both est = "MAP" and est = "WLE" -- as of this release, "20260724" is the default *and recommended* age-conditional reference (norming) model, replacing the original "20210326" model. It uses a refit, continuous-age reference curve (no integer-age flooring) with revised, less overfit age-smoothing, fit on the same norming sample. Pass ref = "20210326" to exactly reproduce Z-scores as computed by package versions prior to this change (only available under est = "MAP"; WLE has no "20210326" reference, since WLE scoring did not exist under that release). See package NEWS for details -- note that upgrading this package without pinning ref = "20210326" will change previously-reported Z-scores.
+#' @param est (character) Defaults to "MAP". Which estimator computes the OVERALL/SF ability score: "MAP" (the original Bayesian maximum a posteriori estimator) or "WLE" (Warm's (1989) weighted likelihood estimator, which removes MAP's shrinkage-toward-the-mean bias at the cost of higher variance per estimate -- see package NEWS for the tradeoffs this involves). Domain scores (MOT/COG/LANG/SEM) are always estimated via MAP; WLE has not been validated for that multidimensional model. If est = "WLE" is used on Long Form data, a warning is issued and only ID/OVERALL/OVERALL_SE/Z_OVERALL/NOTES are returned, matching how Short Form data is already reported.
 #' @importFrom magrittr %>%
 #' @importFrom readr read_csv
 #' @importFrom readr write_csv
@@ -57,7 +59,7 @@
 #' #42.058 45.049 43.755 44.250  38.16
 #' #One observation did not have at least 5 items responded to, so is not included in the results
 
-score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5, dscore = FALSE){
+score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_items = 5, dscore = FALSE, ref = NULL, est = "MAP"){
 
   # Identify if dialog specifying .csv file should be bypassed.
   bypass <- !is.null(data)
@@ -65,6 +67,17 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
     if (!is.data.frame(data)) {
       stop("data argument must be type data.frame")
     }
+  }
+
+  if (!est %in% names(zscore_refs)) {
+    stop("`est` must be one of: ", paste(shQuote(names(zscore_refs)), collapse = ", "), ". Got: ", shQuote(est))
+  }
+  if (is.null(ref)) {
+    ref <- "20260724"
+  }
+  if (!ref %in% names(zscore_refs[[est]])) {
+    stop("No reference model for est = ", shQuote(est), ", ref = ", shQuote(ref), ". Valid ref values for est = ",
+         shQuote(est), ": ", paste(shQuote(names(zscore_refs[[est]])), collapse = ", "))
   }
 
   # Create log file
@@ -106,6 +119,13 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
   cleaned_df = list_cleaned$cleaned_df
   is_sf = list_cleaned$is_sf
   items_noresponse = list_cleaned$items_noresponse
+
+  if (est == "WLE" && !is_sf) {
+    warning("est = \"WLE\" is only supported for OVERALL/SF scores. Domain (MOT/COG/LANG/SEM) ",
+            "scores are always estimated via MAP and have not been validated under WLE, so only ",
+            "ID/OVERALL/OVERALL_SE/Z_OVERALL/NOTES will be returned for this Long Form data.",
+            call. = FALSE)
+  }
 
   # Age polynomial design matrices (centered at 18 months, scaled by 10.39)
   AGE_CENTER <- 18
@@ -151,10 +171,8 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
   # Conduct the optimization
   MAP_LF = 0.*THETA0_LF + NA
-  MAP_SF = 0.*THETA0_SF + NA
   MAP_OVERALL = 0.*THETA0_SF + NA
   SE_LF = MAP_LF
-  SE_SF = MAP_SF
   OVERALL_SE = MAP_OVERALL
   NOTES = rep("", nrow(Y))
   writeLines(paste("\nScoring ", N, " observations:"))
@@ -193,51 +211,43 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
     }
 
-    #Calculate short form scores, as appropriate
-    if(scales_i$SF == TRUE | is_sf == TRUE | scales_i$OVERALL == TRUE){
-
-      js_SF = which(names(Y[i,]) %in% mest_df[mest_df$ShortForm==TRUE,"CREDI_code"])
-      out_SF = optim(par = as.vector(THETA0_SF[i,]),
-                          fn = sf_posterior_density,
-                          Yi = as.vector(Y[i,js_SF]),
-                          MUi = as.vector(MU_SF[i,]),
-                          SIGMA_SQi = as.numeric(SIGMA_SQ[i]),
-                          DELTA = as.vector(DELTA)[js_SF],
-                          ALPHA = as.vector(ALPHA)[js_SF],
-                          J = length(js_SF), #as.integer(J),
-                          method = "BFGS",
-                          hessian = TRUE)
-
-      if(out_SF$convergence==0){ #If converged, produce score.
-        MAP_SF[i,] = out_SF$par
-        SE_SF[i,] = 1/sqrt(out_SF$hessian)
-      }  else {
-        notes_i = paste0(notes_i, "Scoring procedure for SF scale did not converge; SF score not provided.")
-      }
-    }
-
     # Calculate an overall score
     if(scales_i$OVERALL==TRUE){
 
       js_OVERALL = which(names(Y[i,]) %in% mest_df[mest_df$alpha>0,"CREDI_code"])
-      out_OVERALL = optim(par = as.vector(THETA0_SF[i,]),
-                          fn = sf_posterior_density,
-                          Yi = as.vector(Y[i,js_OVERALL]),
-                          MUi = as.vector(MU_SF[i,]),
-                          SIGMA_SQi = as.numeric(SIGMA_SQ[i]),
-                          DELTA = as.vector(DELTA)[js_OVERALL],
-                          ALPHA = as.vector(ALPHA)[js_OVERALL],
-                          J = length(js_OVERALL), #as.integer(J),
-                          method = "BFGS",
-                          hessian = TRUE)
+      n_answered_OVERALL = sum(as.vector(Y[i,js_OVERALL]) != -9L)
 
-      if(out_OVERALL$convergence==0){ #If converged, produce score.
-        MAP_OVERALL[i,] = out_OVERALL$par
-        OVERALL_SE[i,] = 1/sqrt(out_OVERALL$hessian)
-      } else {
-        notes_i = paste0(notes_i, "Scoring procedure for OVERALL scale did not converge; OVERALL score not produced.")
+      if (est == "MAP") {
+        out_OVERALL = optim(par = as.vector(THETA0_SF[i,]),
+                            fn = sf_posterior_density,
+                            Yi = as.vector(Y[i,js_OVERALL]),
+                            MUi = as.vector(MU_SF[i,]),
+                            SIGMA_SQi = as.numeric(SIGMA_SQ[i]),
+                            DELTA = as.vector(DELTA)[js_OVERALL],
+                            ALPHA = as.vector(ALPHA)[js_OVERALL],
+                            J = length(js_OVERALL), #as.integer(J),
+                            method = "BFGS",
+                            hessian = TRUE)
+
+        if(out_OVERALL$convergence==0 && n_answered_OVERALL >= min_items){ #If converged AND enough items were actually answered, produce score.
+          MAP_OVERALL[i,] = out_OVERALL$par
+          OVERALL_SE[i,] = 1/sqrt(out_OVERALL$hessian)
+        } else if (n_answered_OVERALL < min_items) {
+          notes_i = paste0(notes_i, "Fewer than ", min_items, " OVERALL-eligible items were recorded for this observation; OVERALL score not produced.")
+        } else {
+          notes_i = paste0(notes_i, "Scoring procedure for OVERALL scale did not converge; OVERALL score not produced.")
+        }
+      } else { # est == "WLE"
+        Yi_OVERALL <- as.vector(Y[i, js_OVERALL]); Yi_OVERALL[Yi_OVERALL == -9L] <- NA
+        out_OVERALL_wle <- wle_theta(Yi_OVERALL, as.vector(ALPHA)[js_OVERALL], as.vector(DELTA)[js_OVERALL], min_items = min_items)
+
+        if (!is.na(out_OVERALL_wle$theta)) {
+          MAP_OVERALL[i,] = out_OVERALL_wle$theta
+          OVERALL_SE[i,] = out_OVERALL_wle$se
+        } else {
+          notes_i = paste0(notes_i, "Scoring procedure for OVERALL scale did not converge; OVERALL score not produced.")
+        }
       }
-
 
     }
 
@@ -285,12 +295,14 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
   # Calculate in the standardized estimates
   AGE <- cleaned_df %>%
-    select(c(ID, AGE)) %>%
-    mutate(AGE = floor(AGE))
+    select(c(ID, AGE))
+
+  # mu(age)/sigma(age) are computed under the reference model selected by `est`/`ref`
+  # (see get_conditional_mu_sigma.R and the `ref`/`est` arguments above).
+  mu_sigma <- get_conditional_mu_sigma(AGE, zscore_refs[[est]][[ref]])
 
   output_scored <- output_scored %>%
-    left_join(AGE, by = "ID") %>% 
-    left_join(zscoredat, by = "AGE") %>%
+    left_join(mu_sigma, by = "ID") %>%
     mutate(Z_OVERALL = (OVERALL - OVERALL_mu) / OVERALL_sigma,
            Z_COG = (COG - COG_mu) / COG_sigma,
            Z_LANG = (LANG - LANG_mu) / LANG_sigma,
@@ -304,8 +316,10 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
            Z_OVERALL = as.numeric(Z_OVERALL),
            OVERALL_SE = as.numeric(OVERALL_SE)) #Fix a weird issue where these are arrays!? 
   
-  #Sanitize Short Form data
-  if(is_sf == TRUE){
+  #Sanitize Short Form data, and Long Form data scored under est = "WLE" (domain
+  #scores are always MAP and are not returned alongside a WLE OVERALL score; see
+  #the warning issued above).
+  if(is_sf == TRUE || (est == "WLE" && !is_sf)){
     output_scored <- output_scored %>%
       select(ID, OVERALL, OVERALL_SE, Z_OVERALL, NOTES)
   }

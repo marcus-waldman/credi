@@ -9,7 +9,9 @@ score(
   reverse_code = TRUE,
   interactive = TRUE,
   min_items = 5,
-  dscore = FALSE
+  dscore = FALSE,
+  ref = NULL,
+  est = "MAP"
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ score(
 \item{min_items}{(integer) Defaults to 5. The minimum number of scale-specific items (e.g. SEM, MOT, etc.) required for a score to be calculated.}
 
 \item{dscore}{(Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.}
+
+\item{ref}{(character) Defaults to "20260724" for both est = "MAP" and est = "WLE" -- as of this release, "20260724" is the default *and recommended* age-conditional reference (norming) model, replacing the original "20210326" model. It uses a refit, continuous-age reference curve (no integer-age flooring) with revised, less overfit age-smoothing, fit on the same norming sample. Pass ref = "20210326" to exactly reproduce Z-scores as computed by package versions prior to this change (only available under est = "MAP"; WLE has no "20210326" reference, since WLE scoring did not exist under that release). See package NEWS for details -- note that upgrading this package without pinning ref = "20210326" will change previously-reported Z-scores.}
+
+\item{est}{(character) Defaults to "MAP". Which estimator computes the OVERALL/SF ability score: "MAP" (the original Bayesian maximum a posteriori estimator) or "WLE" (Warm's (1989) weighted likelihood estimator, which removes MAP's shrinkage-toward-the-mean bias at the cost of higher variance per estimate -- see package NEWS for the tradeoffs this involves). Domain scores (MOT/COG/LANG/SEM) are always estimated via MAP; WLE has not been validated for that multidimensional model. If est = "WLE" is used on Long Form data, a warning is issued and only ID/OVERALL/OVERALL_SE/Z_OVERALL/NOTES are returned, matching how Short Form data is already reported.}
 }
 \description{
 This function calculates the posterior density function and provides CREDI Overall, Short Form, and domain-specific scores. 

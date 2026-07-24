@@ -95,3 +95,23 @@ scored_dat$scores[, c("MOT", "LANG", "SEM", "COG", "OVERALL")]
     ##      MOT   LANG    SEM    COG OVERALL
     ## 1 43.489 45.968 44.626 45.091  40.079
     ## 2 42.058 45.049 43.755 44.250  38.160
+
+## Z-score reference model and estimator (`ref` / `est`)
+
+Two additional arguments to `score()` control how Z-scores are computed.
+
+`ref` selects which age-conditional reference (norming) model Z-scores are
+standardized against. As of v1.2.0 the default is `"20260724"`, a refit,
+continuous-age reference curve (mu(age)/sigma(age) are evaluated at a
+respondent's exact age, not floored to the nearest whole month). Pass
+`ref = "20210326"` to exactly reproduce Z-scores as computed by earlier
+package versions.
+
+`est` selects the estimator used for the OVERALL/SF ability score:
+`est = "MAP"` (default, unchanged) or `est = "WLE"` (Warm's weighted
+likelihood estimator, which removes MAP's shrinkage-toward-the-mean bias --
+most noticeable in Short Form scoring -- at the cost of higher variance per
+estimate). WLE is not available for domain (MOT/COG/LANG/SEM) scores; using
+`est = "WLE"` on Long Form data returns only OVERALL, with a warning.
+
+See `NEWS.md` and `?score` for details.
