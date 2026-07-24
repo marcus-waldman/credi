@@ -5,12 +5,23 @@
 * The default age-conditional reference (norming) model used to compute
   Z-scores has changed from the original 2021-03-26 model to a refit
   2026-07-24 model. The new model uses a continuous-age reference curve (no
-  integer-age flooring) and revised, BIC-selected age-smoothing, fit on the
-  same norming sample. `score()` calls that do not specify `ref` will return
-  different Z-scores than previous package versions as a result.
+  integer-age flooring) and revised, BIC-selected age-smoothing (with the mu
+  and sigma smoothness search deliberately capped at mu df <= 8 and sigma
+  df <= 3 to keep the curves visually consistent with smooth developmental
+  patterns, rather than using whatever an unrestricted BIC search preferred).
+  `score()` calls that do not specify `ref` will return different Z-scores
+  than previous package versions as a result.
+
+  The new model also extends the supported age range from 0-36 months to
+  0-42 months, fit on an updated and expanded reference sample (same
+  "advantaged" filter criteria as the original 2021 sample -- caregiver
+  education and household asset index -- but without the age <= 36 cutoff).
+  Children aged 36-42 months, who previously received no Z-score at all,
+  now do under the default reference model.
 
   To exactly reproduce Z-scores from package versions prior to 1.2.0, call
-  `score(..., ref = "20210326")`.
+  `score(..., ref = "20210326")` -- note this reproduces the original
+  behavior exactly, including the 0-36 month age limit.
 
 ## New features
 

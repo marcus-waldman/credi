@@ -15,7 +15,7 @@
 #' @param interactive (Logical) Defaults to TRUE. If TRUE, the user may be prompted with caution messages regarding whether scoring should be continued, where to save the scores, where to save a logfile, etc. If FALSE, continuation is assumed and scores and the user is not prompted to save scores or a logfile.
 #' @param min_items (integer) Defaults to 5. The minimum number of scale-specific items (e.g. SEM, MOT, etc.) required for a score to be calculated.
 #' @param dscore (Logical) Defaults to FALSE. If TRUE, calculate GSED d-score and DAZ in addition to CREDI scores.
-#' @param ref (character) Defaults to "20260724" for both est = "MAP" and est = "WLE" -- as of this release, "20260724" is the default *and recommended* age-conditional reference (norming) model, replacing the original "20210326" model. It uses a refit, continuous-age reference curve (no integer-age flooring) with revised, less overfit age-smoothing, fit on the same norming sample. Pass ref = "20210326" to exactly reproduce Z-scores as computed by package versions prior to this change (only available under est = "MAP"; WLE has no "20210326" reference, since WLE scoring did not exist under that release). See package NEWS for details -- note that upgrading this package without pinning ref = "20210326" will change previously-reported Z-scores.
+#' @param ref (character) Defaults to "20260724" for both est = "MAP" and est = "WLE" -- as of this release, "20260724" is the default *and recommended* age-conditional reference (norming) model, replacing the original "20210326" model. It uses a refit, continuous-age reference curve (no integer-age flooring) with revised, less overfit age-smoothing, fit on an updated and expanded reference sample that extends the supported age range from 0-36 months to 0-42 months (ages over 36 months previously received no Z-score at all). Pass ref = "20210326" to exactly reproduce Z-scores as computed by package versions prior to this change (only available under est = "MAP", and still limited to ages 0-36 months; WLE has no "20210326" reference, since WLE scoring did not exist under that release). See package NEWS for details -- note that upgrading this package without pinning ref = "20210326" will change previously-reported Z-scores.
 #' @param est (character) Defaults to "MAP". Which estimator computes the OVERALL/SF ability score: "MAP" (the original Bayesian maximum a posteriori estimator) or "WLE" (Warm's (1989) weighted likelihood estimator, which removes MAP's shrinkage-toward-the-mean bias at the cost of higher variance per estimate -- see package NEWS for the tradeoffs this involves). Domain scores (MOT/COG/LANG/SEM) are always estimated via MAP; WLE has not been validated for that multidimensional model. If est = "WLE" is used on Long Form data, a warning is issued and only ID/OVERALL/OVERALL_SE/Z_OVERALL/NOTES are returned, matching how Short Form data is already reported.
 #' @importFrom magrittr %>%
 #' @importFrom readr read_csv
@@ -194,9 +194,12 @@ score <- function(data = NULL, reverse_code = TRUE, interactive = TRUE, min_item
 
     notes_i = ""
     
-    # Note if age is outside of reference range
-    if(cleaned_df$AGE[i] > 36){
-      notes_i = "Age is between 36 and 42 months. CREDI has not been validated for children in this age range and no Z-scores are produced."
+    # Note if age is outside of reference range. ref = "20210326" only supports
+    # ages up to 36 months; ref = "20260724" (default) extends to 42 months.
+    if(ref == "20210326" && cleaned_df$AGE[i] > 36){
+      notes_i = "Age is over 36 months. The \"20210326\" reference model only supports ages up to 36 months; no Z-scores are produced. Use ref = \"20260724\" (the default) for ages up to 42 months."
+    } else if(ref == "20260724" && cleaned_df$AGE[i] > 42){
+      notes_i = "Age is over 42 months. CREDI has not been validated for children in this age range and no Z-scores are produced."
     }
     
     if(prod(as.numeric(scales_i[1,]))==0){
